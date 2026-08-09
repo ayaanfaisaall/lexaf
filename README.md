@@ -54,6 +54,11 @@ fn main() {
 * **Comparisons:** `EqualTo -eq`, `LessEqual -le`, `LessThan -lt`, `GreaterEqual -ge`, `GreaterThan -gt`
 * **Math:** `Plus`, `Minus`, `Multiply`, `Divide`, `Modulo`, `Power`, `LPths (`, `RPths )`
 
+## Challenges
+
+During the coding of this lexer, i had no internet and no connection to the outer world, so i coded all of this from my mind and a little bit offline documention i had. Hence it might not be perfectly optimized, but it does the work perfectly for which it was written.
+I was at my homeland AJK, where government had disabled all sort of internet due to some public protests.
+
 ## License
 
 MIT License
