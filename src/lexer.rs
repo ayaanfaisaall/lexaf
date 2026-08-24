@@ -17,6 +17,10 @@ impl <'a> Lexer <'a> {
             chars: input.chars().peekable(), 
         }
     }
+
+    fn is_number(str: &str) -> bool {
+        str.chars().all(|c| c.is_digit(10))
+    }
     //
     // tokenizing is the most dumbest (but fastest), step
     // in a shell or language pipeline, it doesn't know if 
@@ -237,7 +241,12 @@ impl <'a> Lexer <'a> {
                                         }                                     
                                     }
                                 }
-                                tokens.push(Token::Word(word));
+                                if Self::is_number(&word) {
+                                    let num: i64 = word.parse().unwrap();
+                                    tokens.push(Token::Num(num));
+                                } else {
+                                    tokens.push(Token::Word(word));
+                                }
                             }
                         }
                     } 
@@ -302,23 +311,28 @@ impl <'a> Lexer <'a> {
                         "false" => {
                             tokens.push(Token::False);
                         }
-                        "-eq" => {
-                            tokens.push(Token::EqualTo);
-                        }
-                        "-le" => {
-                            tokens.push(Token::LessEqual);
-                        }
-                        "-lt" => {
-                            tokens.push(Token::LessThan);
-                        }
-                        "-ge" => {
-                            tokens.push(Token::GreaterEqual);
-                        }
-                        "-gt" => {
-                            tokens.push(Token::GreaterThan);
-                        }
+                        // "-eq" => {
+                        //     tokens.push(Token::EqualTo);
+                        // }
+                        // "-le" => {
+                        //     tokens.push(Token::LessEqual);
+                        // }
+                        // "-lt" => {
+                        //     tokens.push(Token::LessThan);
+                        // }
+                        // "-ge" => {
+                        //     tokens.push(Token::GreaterEqual);
+                        // }
+                        // "-gt" => {
+                        //     tokens.push(Token::GreaterThan);
+                        // }
                         _ => {
-                            tokens.push(Token::Word(word));
+                            if Self::is_number(&word) {
+                                let num: i64 = word.parse().unwrap();
+                                tokens.push(Token::Num(num));
+                            } else {
+                                tokens.push(Token::Word(word));
+                            }
                         }
                     }
                 }

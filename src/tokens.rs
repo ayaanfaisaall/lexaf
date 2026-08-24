@@ -8,6 +8,7 @@ pub enum Token {
     // general
     Word(String),
     Str(Vec<StrIntr>),
+    Num(i64),
     // symbols
     NewLine,
     Eval,
@@ -45,11 +46,11 @@ pub enum Token {
     True,
     False,
     // equality operators
-    EqualTo, 
-    LessEqual, 
-    LessThan,
-    GreaterEqual,
-    GreaterThan,
+    // EqualTo, 
+    // LessEqual, 
+    // LessThan,
+    // GreaterEqual,
+    // GreaterThan,
     //math operators
     Plus,
     Minus,

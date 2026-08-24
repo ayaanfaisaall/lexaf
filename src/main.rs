@@ -16,7 +16,7 @@
 //
 #[cfg(test)]
 mod tests;
-use afsh_lex::lexer:: {
+use lexaf::lexer:: {
     Lexer
 };
 //

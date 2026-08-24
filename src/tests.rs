@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use afsh_lex::lexer::Lexer; 
-    use afsh_lex::tokens::{Token, StrIntr};
+    use lexaf::lexer::Lexer; 
+    use lexaf::tokens::{Token, StrIntr};
 
     #[test]
     fn test_colon_and_urls() {
