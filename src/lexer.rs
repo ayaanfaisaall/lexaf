@@ -131,15 +131,6 @@ impl <'a> Lexer <'a> {
                             tokens.push(Token::And);
                         }
                     }
-                    //
-                    // if let Some(&ch) = self.chars.peek() {
-                    //     if ch == '&' {
-                    //         tokens.push(Token::AndAnd);
-                    //         self.chars.next();
-                    //     } else {
-                    //         tokens.push(Token::And);
-                    //     }
-                    // }
                 }
                 '!' => {
                     self.chars.next();
@@ -153,15 +144,6 @@ impl <'a> Lexer <'a> {
                             tokens.push(Token::Bang);
                         }
                     }
-
-                    // if let Some(&ch) = self.chars.peek() {
-                    //     if ch == '=' {
-                    //         tokens.push(Token::NotEq);
-                    //         self.chars.next();
-                    //     } else {
-                    //         tokens.push(Token::Bang);
-                    //     }
-                    // }
                 }
                 '=' => {
                     self.chars.next();
@@ -198,18 +180,9 @@ impl <'a> Lexer <'a> {
                             self.chars.next();
                         }
                         _ => {
-                            tokens.push(Token::RdrctIn);
+                            tokens.push(Token::RdrctOut);
                         }
                     }
-                    //
-                    // if let Some(&ch) = self.chars.peek() {
-                    //     if ch == '>' {
-                    //         tokens.push(Token::Append);
-                    //         self.chars.next();
-                    //     } else {
-                    //         tokens.push(Token::RdrctOut);
-                    //     }
-                    // }
                 }
                 '#' => {
                     self.chars.next();
