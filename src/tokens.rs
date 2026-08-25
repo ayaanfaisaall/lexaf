@@ -17,11 +17,13 @@ pub enum Token {
     Comma,
     And,
     // logical operators
-    Assign,
     AndAnd,
     OrOr,
-    EqEq,
     Bang,
+    //comparison & assign operators
+    Assign,
+    EqEq,
+    NotEq,
     // shell operators
     Pipe,
     RdrctIn,

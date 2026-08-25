@@ -99,10 +99,6 @@ impl <'a> Lexer <'a> {
                     tokens.push(Token::Comma);
                     self.chars.next();
                 }
-                '!' => {
-                    tokens.push(Token::Bang);
-                    self.chars.next();
-                }
                 '{' => {
                     tokens.push(Token::LBrc);
                     self.chars.next();
@@ -125,47 +121,95 @@ impl <'a> Lexer <'a> {
                 }
                 '&' => {
                     self.chars.next();
-                    if let Some(&ch) = self.chars.peek() {
-                        if ch == '&' {
+                    let a = self.chars.peek();
+                    match a {
+                        Some('&') => {
                             tokens.push(Token::AndAnd);
                             self.chars.next();
-                        } else {
+                        }
+                        _ => {
                             tokens.push(Token::And);
                         }
                     }
+                    //
+                    // if let Some(&ch) = self.chars.peek() {
+                    //     if ch == '&' {
+                    //         tokens.push(Token::AndAnd);
+                    //         self.chars.next();
+                    //     } else {
+                    //         tokens.push(Token::And);
+                    //     }
+                    // }
+                }
+                '!' => {
+                    self.chars.next();
+                    let a = self.chars.peek();
+                    match a {
+                        Some('=') => {
+                            tokens.push(Token::NotEq);
+                            self.chars.next();
+                        }
+                        _ => {
+                            tokens.push(Token::Bang);
+                        }
+                    }
+
+                    // if let Some(&ch) = self.chars.peek() {
+                    //     if ch == '=' {
+                    //         tokens.push(Token::NotEq);
+                    //         self.chars.next();
+                    //     } else {
+                    //         tokens.push(Token::Bang);
+                    //     }
+                    // }
                 }
                 '=' => {
                     self.chars.next();
-                    if let Some(&ch) = self.chars.peek() {
-                        if ch == '=' {
+                    let a = self.chars.peek();
+                    match a {
+                        Some('=') => {
                             tokens.push(Token::EqEq);
                             self.chars.next();
-                        } else {
+                        }
+                        _ => {
                             tokens.push(Token::Assign);
                         }
                     }
                 }
                 '|' => {
                     self.chars.next();
-                    if let Some(&ch) = self.chars.peek() {
-                        if ch == '|' {
+                    let a = self.chars.peek();
+                    match a {
+                        Some('|') => {
                             tokens.push(Token::OrOr);
                             self.chars.next();
-                        } else {
+                        }
+                        _ => {
                             tokens.push(Token::Pipe);
                         }
                     }
                 }
                 '>' => {
                     self.chars.next();
-                    if let Some(&ch) = self.chars.peek() {
-                        if ch == '>' {
+                    let a = self.chars.peek();
+                    match a {
+                        Some('>') => {
                             tokens.push(Token::Append);
                             self.chars.next();
-                        } else {
-                            tokens.push(Token::RdrctOut);
+                        }
+                        _ => {
+                            tokens.push(Token::RdrctIn);
                         }
                     }
+                    //
+                    // if let Some(&ch) = self.chars.peek() {
+                    //     if ch == '>' {
+                    //         tokens.push(Token::Append);
+                    //         self.chars.next();
+                    //     } else {
+                    //         tokens.push(Token::RdrctOut);
+                    //     }
+                    // }
                 }
                 '#' => {
                     self.chars.next();
