@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "afsh-lex"
+name = "lexaf"
 version = "0.1.2"

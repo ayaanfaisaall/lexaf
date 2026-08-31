@@ -1,14 +1,14 @@
 [package]
-name = "afsh-lex"
-version = "0.1.2"
+name = "lexaf"
+version = "0.1.3"
 edition = "2024"
 authors = ["ayaan faisal <info@ayaanfaisaal.cc>"]
-description = "a custom shell-first lexer, for a shell afsh"
+description = "a custom shell-first lexer, for afsh"
 license = "MIT"
-repository = "https://github.com/ayaanfaisaall/afsh-lex"
+repository = "https://github.com/ayaanfaisaall/lexaf"
 
 [lib]
-name = "afsh_lex"
+name = "lexaf"
 path = "src/lib.rs"
 
 [dependencies]

@@ -1,8 +1,8 @@
-# afsh-lex
+# lexaf
 
 A simple lexical analyzer (tokenizer) for `afsh` (a shell).
 
-Tokenizing is the "dumbest but fastest" step in this shell's pipeline. `afsh-lex` doesn't know whether a word is an external binary, a shell builtin, or an argument—it simply reads raw text and categorizes it into structured tokens (words, language keywords, strings, punctuation, and operators) so the parser can make sense of it later.
+Tokenizing is the "dumbest but fastest" step in this shell's pipeline. `lexaf` doesn't know whether a word is an external binary, a shell builtin, or an argument—it simply reads raw text and categorizes it into structured tokens (words, language keywords, strings, punctuation, and operators) so the parser can make sense of it later.
 
 ## Features
 
@@ -17,18 +17,18 @@ Tokenizing is the "dumbest but fastest" step in this shell's pipeline. `afsh-lex
 Since the crate is published on crates.io, you can easily add it to your Rust project:
 
 ```bash
-cargo add afsh_lex
+cargo add lexaf
 ```
 
 ## Usage
 
-Using `afsh_lex` is incredibly simple. Just instantiate the `Lexer` with a string slice and call the `tokenize()` method.
+Using `lexaf` is incredibly simple. Just instantiate the `Lexer` with a string slice and call the `tokenize()` method.
 
 ```rust
-use afsh_lex::Lexer;
+use lexaf::Lexer;
 
 fn main() {
-    let any_str = String::from(r#"let a = "this is afsh_lex"; print "{a}" "#);
+    let any_str = String::from(r#"let a = "this is lexaf"; print "{a}" "#);
     let mut lexer = Lexer::new(&any_str);
     let tokens = lexer.tokenize();
     println!("{:?}", tokens);
@@ -38,12 +38,12 @@ fn main() {
 ### Output
 
 ```rust
-[Let, Word("a"), Assign, Str([Literal("this is afsh_lex")]), SemiCln, Print, Str([Variable("a"), Literal("{}")]), EOF]
+[Let, Word("a"), Assign, Str([Literal("this is lexaf")]), SemiCln, Print, Str([Variable("a"), Literal("{}")]), EOF]
 ```
 
 ## Tokens
 
-`afsh-lex` breaks down input into the following enum variants:
+`lexaf` breaks down input into the following enum variants:
 
 * **General:** `Word(String)`, `Str(Vec<StrIntr>)`
 * **Control:** `NewLine`, `EOF`
