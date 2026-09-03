@@ -9,7 +9,7 @@ Tokenizing is the "dumbest but fastest" step in this shell's pipeline. `lexaf` d
 * **Custom Shell Operators:** Native support for pipes (`|`), redirects (`<`, `>`, `>>`), and background execution (`&`).
 * **Built-in Scripting Keywords:** Tokenizes custom language keywords like `let`, `print`, `if`, `elif`, `else`, `for`, `while`, `in`, `to`, and `break`.
 * **String Interpolation:** Parses variables embedded directly inside strings using curly braces (e.g., `"my name is {name}"`).
-* **Math & Logic:** Recognizes standard math operators (`+`, `-`, `*`, `/`, `%`, `^`) and bash-style equality flags (`-eq`, `-le`, `-lt`, `-ge`, `-gt`).
+* **Math & Logic:** Recognizes standard math operators (`+`, `-`, `*`, `/`, `%`, `^`).
 * **No Standalone Parentheses:** By design, standard parentheses `()` are intentionally excluded from the general shell language and are only recognized as specific math tokens.
 
 ## Installation
@@ -51,7 +51,6 @@ fn main() {
 * **Shell Operators:** `Pipe |`, `RdrctIn <`, `RdrctOut >`, `Append >>`, `Eval $`
 * **Logical & Assignment:** `Assign =`, `AndAnd &&`, `OrOr ||`, `EqEq ==`, `Bang !`, `And &`
 * **Keywords:** `Let`, `Print`, `If`, `Elif`, `Else`, `For`, `While`, `In`, `To`, `Break`, `True`, `False`
-* **Comparisons:** `EqualTo -eq`, `LessEqual -le`, `LessThan -lt`, `GreaterEqual -ge`, `GreaterThan -gt`
 * **Math:** `Plus`, `Minus`, `Multiply`, `Divide`, `Modulo`, `Power`, `LPths (`, `RPths )`
 
 ## Challenges
