@@ -1,3 +1,72 @@
+use std::fmt;
+
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            // General values
+            Token::Word(_) => write!(f, "identifier"),
+            Token::Str(_) => write!(f, "string"),
+            Token::Num(_) => write!(f, "integer"),
+            Token::Float(_) => write!(f, "float"),
+            
+            // Symbols & punctuation
+            Token::NewLine => write!(f, "newline"),
+            Token::Eval => write!(f, "eval"), 
+            Token::SemiCln => write!(f, ";"),
+            Token::Comma => write!(f, ","),
+            Token::And => write!(f, "&"),
+            
+            // Logical operators
+            Token::AndAnd => write!(f, "&&"),
+            Token::OrOr => write!(f, "||"),
+            Token::Bang => write!(f, "!"),
+            
+            // Comparison & assign operators
+            Token::Assign => write!(f, "="),
+            Token::EqEq => write!(f, "=="),
+            Token::NotEq => write!(f, "!="),
+            
+            // Shell operators
+            Token::Pipe => write!(f, "|"),
+            Token::RdrctIn => write!(f, "<"),
+            Token::RdrctOut => write!(f, ">"),
+            Token::Append => write!(f, ">>"),
+            
+            // Brackets
+            Token::LBrc => write!(f, "{{"),
+            Token::RBrc => write!(f, "}}"),
+            Token::LSqr => write!(f, "["),
+            Token::RSqr => write!(f, "]"),
+            Token::LPths => write!(f, "("),
+            Token::RPths => write!(f, ")"),
+            
+            // Language keywords
+            Token::Let => write!(f, "let"),
+            Token::Print => write!(f, "print"),
+            Token::If => write!(f, "if"),
+            Token::Elif => write!(f, "elif"),
+            Token::Else => write!(f, "else"),
+            Token::For => write!(f, "for"),
+            Token::While => write!(f, "while"),
+            Token::In => write!(f, "in"),
+            Token::To => write!(f, "to"),
+            Token::Break => write!(f, "break"),
+            Token::True => write!(f, "true"),
+            Token::False => write!(f, "false"),
+            
+            // Math operators
+            Token::Plus => write!(f, "+"),
+            Token::Minus => write!(f, "-"),
+            Token::Multiply => write!(f, "*"),
+            Token::Divide => write!(f, "/"),
+            Token::Modulo => write!(f, "%"),
+            Token::Power => write!(f, "**"), 
+            
+            // End of file
+            Token::EOF => write!(f, "end of file"),
+        }
+    }
+}
 
 /// Represents a range in the source code (byte offsets).
 #[derive(Debug, Clone, PartialEq, Default)]
