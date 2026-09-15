@@ -1,18 +1,19 @@
 #[cfg(test)]
 mod tests {
     use lexaf::lexer::Lexer; 
-    use lexaf::tokens::{Token, StrIntr};
+    use lexaf::tokens::{Token, StrIntr, SpannedToken, Span};
 
     #[test]
     fn test_colon_and_urls() {
         let input = "ping https://www.ayaanfaisaall.cc";
-        let tokens = Lexer::new(&input).tokenize();
+        let mut lexer = Lexer::new(&input);
+        let tokens = lexer.tokenize();
         assert_eq!(
             tokens,
             vec![
-            Token::Word(String::from("ping")),
-            Token::Word(String::from("https://www.ayaanfaisaall.cc")),
-            Token::EOF,
+                SpannedToken { token: Token::Word(String::from("ping")), span: Span { start: 0, end: 4 } },
+                SpannedToken { token: Token::Word(String::from("https://www.ayaanfaisaall.cc")), span: Span { start: 5, end: 33 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 33, end: 33 } },
             ]
         );
     }
@@ -26,13 +27,13 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Token::Word(String::from("git")),
-                Token::Word(String::from("add")),
-                Token::Word(String::from(".")),
-                Token::AndAnd,
-                Token::Word(String::from("cat")),
-                Token::Word(String::from("~/Downloads/abc/dc.jpg")),
-                Token::EOF,
+                SpannedToken { token: Token::Word(String::from("git")), span: Span { start: 0, end: 3 } },
+                SpannedToken { token: Token::Word(String::from("add")), span: Span { start: 4, end: 7 } },
+                SpannedToken { token: Token::Word(String::from(".")), span: Span { start: 8, end: 9 } },
+                SpannedToken { token: Token::AndAnd, span: Span { start: 10, end: 12 } },
+                SpannedToken { token: Token::Word(String::from("cat")), span: Span { start: 13, end: 16 } },
+                SpannedToken { token: Token::Word(String::from("~/Downloads/abc/dc.jpg")), span: Span { start: 17, end: 39 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 39, end: 39 } },
             ]
         );
     }
@@ -46,12 +47,12 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Token::Let,
-                Token::Word(String::from("n1")),
-                Token::Assign,
-                Token::Num(43),
-                Token::NewLine,
-                Token::EOF,
+                SpannedToken { token: Token::Let, span: Span { start: 0, end: 3 } },
+                SpannedToken { token: Token::Word(String::from("n1")), span: Span { start: 4, end: 6 } },
+                SpannedToken { token: Token::Assign, span: Span { start: 7, end: 8 } },
+                SpannedToken { token: Token::Num(43), span: Span { start: 9, end: 11 } },
+                SpannedToken { token: Token::NewLine, span: Span { start: 11, end: 12 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 12, end: 12 } },
             ]
         );
     }
@@ -65,16 +66,16 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Token::For,
-                Token::Word(String::from("i")),
-                Token::In,
-                Token::Num(0),
-                Token::To,
-                Token::Num(10),
-                Token::LBrc,
-                Token::Break,
-                Token::RBrc,
-                Token::EOF,
+                SpannedToken { token: Token::For, span: Span { start: 0, end: 3 } },
+                SpannedToken { token: Token::Word(String::from("i")), span: Span { start: 4, end: 5 } },
+                SpannedToken { token: Token::In, span: Span { start: 6, end: 8 } },
+                SpannedToken { token: Token::Num(0), span: Span { start: 9, end: 10 } },
+                SpannedToken { token: Token::To, span: Span { start: 11, end: 13 } },
+                SpannedToken { token: Token::Num(10), span: Span { start: 14, end: 16 } },
+                SpannedToken { token: Token::LBrc, span: Span { start: 17, end: 18 } },
+                SpannedToken { token: Token::Break, span: Span { start: 19, end: 24 } },
+                SpannedToken { token: Token::RBrc, span: Span { start: 25, end: 26 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 26, end: 26 } },
             ]
         );
     }
@@ -88,19 +89,19 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Token::Eval,
-                Token::LBrc,
-                Token::Num(84),
-                Token::Minus,
-                Token::LPths,
-                Token::Num(44),
-                Token::Minus,
-                Token::Num(43),
-                Token::RPths,
-                Token::Multiply,
-                Token::Num(34),
-                Token::RBrc,
-                Token::EOF,
+                SpannedToken { token: Token::Eval, span: Span { start: 0, end: 1 } },
+                SpannedToken { token: Token::LBrc, span: Span { start: 1, end: 2 } },
+                SpannedToken { token: Token::Num(84), span: Span { start: 3, end: 5 } },
+                SpannedToken { token: Token::Minus, span: Span { start: 6, end: 7 } },
+                SpannedToken { token: Token::LPths, span: Span { start: 8, end: 9 } },
+                SpannedToken { token: Token::Num(44), span: Span { start: 9, end: 11 } },
+                SpannedToken { token: Token::Minus, span: Span { start: 12, end: 13 } },
+                SpannedToken { token: Token::Num(43), span: Span { start: 13, end: 15 } },
+                SpannedToken { token: Token::RPths, span: Span { start: 15, end: 16 } },
+                SpannedToken { token: Token::Multiply, span: Span { start: 17, end: 18 } },
+                SpannedToken { token: Token::Num(34), span: Span { start: 19, end: 21 } },
+                SpannedToken { token: Token::RBrc, span: Span { start: 22, end: 23 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 23, end: 23 } },
             ]
         );
     }
@@ -114,15 +115,15 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Token::Print,
-                Token::Str(vec![
+                SpannedToken { token: Token::Print, span: Span { start: 0, end: 5 } },
+                SpannedToken { token: Token::Str(vec![
                     StrIntr::Variable(String::from("name")),
                     StrIntr::Literal(String::from("name: {}")),
-                ]),
-                Token::Pipe,
-                Token::Word(String::from("awk")),
-                Token::Word(String::from("'{print}'")),
-                Token::EOF,
+                ]), span: Span { start: 6, end: 20 } },
+                SpannedToken { token: Token::Pipe, span: Span { start: 21, end: 22 } },
+                SpannedToken { token: Token::Word(String::from("awk")), span: Span { start: 23, end: 26 } },
+                SpannedToken { token: Token::Word(String::from("'{print}'")), span: Span { start: 27, end: 38 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 38, end: 38 } },
             ]
         );
     }
@@ -136,12 +137,12 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Token::Print,
-                Token::Num(1),
-                Token::NewLine,
-                Token::Print,
-                Token::Num(2),
-                Token::EOF,
+                SpannedToken { token: Token::Print, span: Span { start: 0, end: 5 } },
+                SpannedToken { token: Token::Num(1), span: Span { start: 6, end: 7 } },
+                SpannedToken { token: Token::NewLine, span: Span { start: 27, end: 28 } },
+                SpannedToken { token: Token::Print, span: Span { start: 28, end: 33 } },
+                SpannedToken { token: Token::Num(2), span: Span { start: 34, end: 35 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 35, end: 35 } },
             ]
         );
     }
@@ -155,16 +156,16 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Token::Word(String::from("okay")),
-                Token::Word(String::from("--l")),
-                Token::RdrctOut,
-                Token::Word(String::from("jj")),
-                Token::Word(String::from("--help")),
-                Token::Append,
-                Token::Word(String::from("hhff")),
-                Token::RdrctIn,
-                Token::Word(String::from("in.txt")),
-                Token::EOF,
+                SpannedToken { token: Token::Word(String::from("okay")), span: Span { start: 0, end: 4 } },
+                SpannedToken { token: Token::Word(String::from("--l")), span: Span { start: 5, end: 8 } },
+                SpannedToken { token: Token::RdrctOut, span: Span { start: 9, end: 10 } },
+                SpannedToken { token: Token::Word(String::from("jj")), span: Span { start: 11, end: 13 } },
+                SpannedToken { token: Token::Word(String::from("--help")), span: Span { start: 14, end: 20 } },
+                SpannedToken { token: Token::Append, span: Span { start: 20, end: 22 } },
+                SpannedToken { token: Token::Word(String::from("hhff")), span: Span { start: 23, end: 27 } },
+                SpannedToken { token: Token::RdrctIn, span: Span { start: 28, end: 29 } },
+                SpannedToken { token: Token::Word(String::from("in.txt")), span: Span { start: 30, end: 36 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 36, end: 36 } },
             ]
         );
     }
@@ -178,28 +179,28 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Token::If,
-                Token::Word(String::from("n1")),
-                Token::Word(String::from("-eq")),
-                Token::Num(43),
-                Token::LBrc,
-                Token::Print,
-                Token::Str(vec![StrIntr::Literal(String::from("yes"))]),
-                Token::RBrc,
-                Token::Elif,
-                Token::Word(String::from("n1")),
-                Token::Word(String::from("-le")),
-                Token::Num(23),
-                Token::LBrc,
-                Token::Print,
-                Token::Str(vec![StrIntr::Literal(String::from("no"))]),
-                Token::RBrc,
-                Token::Else,
-                Token::LBrc,
-                Token::Print,
-                Token::Str(vec![StrIntr::Literal(String::from("maybe"))]),
-                Token::RBrc,
-                Token::EOF,
+                SpannedToken { token: Token::If, span: Span { start: 0, end: 2 } },
+                SpannedToken { token: Token::Word(String::from("n1")), span: Span { start: 3, end: 5 } },
+                SpannedToken { token: Token::Word(String::from("-eq")), span: Span { start: 6, end: 9 } },
+                SpannedToken { token: Token::Num(43), span: Span { start: 10, end: 12 } },
+                SpannedToken { token: Token::LBrc, span: Span { start: 13, end: 14 } },
+                SpannedToken { token: Token::Print, span: Span { start: 15, end: 20 } },
+                SpannedToken { token: Token::Str(vec![StrIntr::Literal(String::from("yes"))]), span: Span { start: 21, end: 26 } },
+                SpannedToken { token: Token::RBrc, span: Span { start: 27, end: 28 } },
+                SpannedToken { token: Token::Elif, span: Span { start: 29, end: 33 } },
+                SpannedToken { token: Token::Word(String::from("n1")), span: Span { start: 34, end: 36 } },
+                SpannedToken { token: Token::Word(String::from("-le")), span: Span { start: 37, end: 40 } },
+                SpannedToken { token: Token::Num(23), span: Span { start: 41, end: 43 } },
+                SpannedToken { token: Token::LBrc, span: Span { start: 44, end: 45 } },
+                SpannedToken { token: Token::Print, span: Span { start: 46, end: 51 } },
+                SpannedToken { token: Token::Str(vec![StrIntr::Literal(String::from("no"))]), span: Span { start: 52, end: 56 } },
+                SpannedToken { token: Token::RBrc, span: Span { start: 57, end: 58 } },
+                SpannedToken { token: Token::Else, span: Span { start: 59, end: 63 } },
+                SpannedToken { token: Token::LBrc, span: Span { start: 64, end: 65 } },
+                SpannedToken { token: Token::Print, span: Span { start: 66, end: 71 } },
+                SpannedToken { token: Token::Str(vec![StrIntr::Literal(String::from("maybe"))]), span: Span { start: 72, end: 79 } },
+                SpannedToken { token: Token::RBrc, span: Span { start: 80, end: 81 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 81, end: 81 } },
             ]
         );
     }
@@ -213,16 +214,16 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Token::While,
-                Token::True,
-                Token::LBrc,
-                Token::Break,
-                Token::RBrc,
-                Token::While,
-                Token::False,
-                Token::LBrc,
-                Token::RBrc,
-                Token::EOF,
+                SpannedToken { token: Token::While, span: Span { start: 0, end: 5 } },
+                SpannedToken { token: Token::True, span: Span { start: 6, end: 10 } },
+                SpannedToken { token: Token::LBrc, span: Span { start: 11, end: 12 } },
+                SpannedToken { token: Token::Break, span: Span { start: 13, end: 18 } },
+                SpannedToken { token: Token::RBrc, span: Span { start: 19, end: 20 } },
+                SpannedToken { token: Token::While, span: Span { start: 21, end: 26 } },
+                SpannedToken { token: Token::False, span: Span { start: 27, end: 32 } },
+                SpannedToken { token: Token::LBrc, span: Span { start: 33, end: 34 } },
+                SpannedToken { token: Token::RBrc, span: Span { start: 35, end: 36 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 36, end: 36 } },
             ]
         );
     }
@@ -236,14 +237,14 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Token::Word(String::from("a")),
-                Token::Word(String::from("-lt")),
-                Token::Word(String::from("b")),
-                Token::Word(String::from("-ge")),
-                Token::Word(String::from("c")),
-                Token::Word(String::from("-gt")),
-                Token::Word(String::from("d")),
-                Token::EOF,
+                SpannedToken { token: Token::Word(String::from("a")), span: Span { start: 0, end: 1 } },
+                SpannedToken { token: Token::Word(String::from("-lt")), span: Span { start: 2, end: 5 } },
+                SpannedToken { token: Token::Word(String::from("b")), span: Span { start: 6, end: 7 } },
+                SpannedToken { token: Token::Word(String::from("-ge")), span: Span { start: 8, end: 11 } },
+                SpannedToken { token: Token::Word(String::from("c")), span: Span { start: 12, end: 13 } },
+                SpannedToken { token: Token::Word(String::from("-gt")), span: Span { start: 14, end: 17 } },
+                SpannedToken { token: Token::Word(String::from("d")), span: Span { start: 18, end: 19 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 19, end: 19 } },
             ]
         );
     }
@@ -257,19 +258,19 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Token::If,
-                Token::False,
-                Token::OrOr,
-                Token::True,
-                Token::AndAnd,
-                Token::Word(String::from("n1")),
-                Token::Word(String::from("-gt")),
-                Token::Num(5),
-                Token::LBrc,
-                Token::Word(String::from("theme")),
-                Token::Num(4),
-                Token::RBrc,
-                Token::EOF,
+                SpannedToken { token: Token::If, span: Span { start: 0, end: 2 } },
+                SpannedToken { token: Token::False, span: Span { start: 3, end: 8 } },
+                SpannedToken { token: Token::OrOr, span: Span { start: 9, end: 11 } },
+                SpannedToken { token: Token::True, span: Span { start: 12, end: 16 } },
+                SpannedToken { token: Token::AndAnd, span: Span { start: 17, end: 19 } },
+                SpannedToken { token: Token::Word(String::from("n1")), span: Span { start: 20, end: 22 } },
+                SpannedToken { token: Token::Word(String::from("-gt")), span: Span { start: 23, end: 26 } },
+                SpannedToken { token: Token::Num(5), span: Span { start: 27, end: 28 } },
+                SpannedToken { token: Token::LBrc, span: Span { start: 29, end: 30 } },
+                SpannedToken { token: Token::Word(String::from("theme")), span: Span { start: 31, end: 36 } },
+                SpannedToken { token: Token::Num(4), span: Span { start: 37, end: 38 } },
+                SpannedToken { token: Token::RBrc, span: Span { start: 39, end: 40 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 40, end: 40 } },
             ]
         );
     }

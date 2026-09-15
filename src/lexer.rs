@@ -1,56 +1,79 @@
-use std:: {
+use std::{
     iter::Peekable,
-    str::Chars,
+    str::CharIndices,
 };
 use crate::tokens::{
+    Span,
     Token,
+    SpannedToken,
     StrIntr,
 };
 
-pub struct Lexer <'a> {
-    chars: Peekable<Chars <'a>>,
+/// A lexical analyzer that converts a raw string input into a sequence of tokens.
+pub struct Lexer<'a> {
+    chars: Peekable<CharIndices<'a>>,
+    input_len: usize,
 }
 
-impl <'a> Lexer <'a> {
-    pub fn new (input: &'a str) -> Self {
+impl<'a> Lexer<'a> {
+    /// Creates a new `Lexer` instance from the given string input.
+    pub fn new(input: &'a str) -> Self {
         Lexer {
-            chars: input.chars().peekable(), 
+            chars: input.char_indices().peekable(), 
+            input_len: input.len(),
         }
     }
 
-    fn is_number(str: &str) -> bool {
-        str.chars().all(|c| c.is_digit(10))
+    /// Helper to get the current byte index (or the end of the string if EOF)
+    fn pos(&mut self) -> usize {
+        self.chars.peek().map(|&(idx, _)| idx).unwrap_or(self.input_len)
     }
-    //
-    // tokenizing is the most dumbest (but fastest), step
-    // in a shell or language pipeline, it doesn't know if 
-    // a word is an external binary, an argument, a shell
-    // builtin, or a shell keyword, it just knows if it is 
-    // a word, a lang keyword, a string, some punctuation,
-    // brackets or an operator :)
-    //
-    pub fn tokenize (&mut self) -> Vec<Token> {
+
+    /// Checks if a given string slice consists entirely of base-10 digits (integer).
+    fn is_number(str: &str) -> bool {
+        let s = str.strip_prefix('-').unwrap_or(str);
+        !s.is_empty() && s.chars().all(|c| c.is_digit(10))
+    }
+
+    /// Checks if a given string slice represents a floating-point (decimal) number.
+    fn is_decimal(str: &str) -> bool {
+        let s = str.strip_prefix('-').unwrap_or(str);
+        let mut dot_count = 0;
+        let mut has_digits = false;
+        for c in s.chars() {
+            if c.is_digit(10) {
+                has_digits = true;
+            } else if c == '.' {
+                dot_count += 1;
+            } else {
+                return false; 
+            }
+        }
+        has_digits && dot_count == 1
+    }
+
+    /// Processes the input character stream and builds a vector of spanned tokens.
+    pub fn tokenize(&mut self) -> Vec<SpannedToken> {
         let mut tokens = Vec::new();
-        while let Some(&c) = self.chars.peek() {
+        
+        while let Some(&(start, c)) = self.chars.peek() {
             match c {
                 ' ' | '\t' | '\r' => {
                     self.chars.next();
                 }
                 '\n' => {
-                    tokens.push(Token::NewLine);
                     self.chars.next();
+                    tokens.push(SpannedToken {
+                        token: Token::NewLine,
+                        span: Span { start, end: start + 1 },
+                    });
                 }
-                //
-                // :) = String::from("?");
-                // currently the literal has {} for the position of
-                // the variable in it, idk if i have to use a better
-                // approach for it or not :)
-                //
                 '"' => {
                     self.chars.next();
                     let mut str = Vec::new();
                     let mut lit = String::new();
-                    while let Some(&ch) = self.chars.peek() {
+                    
+                    while let Some(&(_, ch)) = self.chars.peek() {
                         if ch == '"' {
                             self.chars.next();
                             break;
@@ -58,7 +81,7 @@ impl <'a> Lexer <'a> {
                             lit.push(ch);
                             self.chars.next();
                             let mut var = String::new();
-                            while let Some(&v) = self.chars.peek() {
+                            while let Some(&(_, v)) = self.chars.peek() {
                                 if v == '}' {
                                     lit.push(v);
                                     self.chars.next();
@@ -66,17 +89,6 @@ impl <'a> Lexer <'a> {
                                 } else if v == '"' {
                                     self.chars.next();
                                     break;
-                                //
-                                // an edge case if a user doesn't close {} then the rest of string
-                                // will become variable, not the whole line, e.g: print "my name is
-                                // {name and i am a rustacean" > file.txt, in this case it will
-                                // throw and error that name and i am a rustacean is not a variable,
-                                //
-                                // in the parser we will also check unclosed brackets and strings, 
-                                // then we will remove this from here
-                                //
-                                // we also have to add a reedline validator for multiline,
-                                //
                                 } else {
                                     var.push(v);
                                     self.chars.next();
@@ -89,104 +101,89 @@ impl <'a> Lexer <'a> {
                         }
                     }
                     str.push(StrIntr::Literal(lit));
-                    tokens.push(Token::Str(str));
+                    
+                    let end = self.pos();
+                    tokens.push(SpannedToken {
+                        token: Token::Str(str),
+                        span: Span { start, end },
+                    });
                 }
                 ';' => {
-                    tokens.push(Token::SemiCln);
                     self.chars.next();
+                    tokens.push(SpannedToken { token: Token::SemiCln, span: Span { start, end: start + 1 } });
                 }
                 ',' => {
-                    tokens.push(Token::Comma);
                     self.chars.next();
+                    tokens.push(SpannedToken { token: Token::Comma, span: Span { start, end: start + 1 } });
                 }
                 '{' => {
-                    tokens.push(Token::LBrc);
                     self.chars.next();
+                    tokens.push(SpannedToken { token: Token::LBrc, span: Span { start, end: start + 1 } });
                 }
                 '}' => {
-                    tokens.push(Token::RBrc);
                     self.chars.next();
+                    tokens.push(SpannedToken { token: Token::RBrc, span: Span { start, end: start + 1 } });
                 }
                 '[' => {
-                    tokens.push(Token::LSqr);
                     self.chars.next();
+                    tokens.push(SpannedToken { token: Token::LSqr, span: Span { start, end: start + 1 } });
                 }
                 ']' => {
-                    tokens.push(Token::RSqr);
                     self.chars.next();
+                    tokens.push(SpannedToken { token: Token::RSqr, span: Span { start, end: start + 1 } });
                 }
                 '<' => {
-                    tokens.push(Token::RdrctIn);
                     self.chars.next();
+                    tokens.push(SpannedToken { token: Token::RdrctIn, span: Span { start, end: start + 1 } });
                 }
                 '&' => {
                     self.chars.next();
-                    let a = self.chars.peek();
-                    match a {
-                        Some('&') => {
-                            tokens.push(Token::AndAnd);
-                            self.chars.next();
-                        }
-                        _ => {
-                            tokens.push(Token::And);
-                        }
+                    if let Some(&(_, '&')) = self.chars.peek() {
+                        self.chars.next();
+                        tokens.push(SpannedToken { token: Token::AndAnd, span: Span { start, end: start + 2 } });
+                    } else {
+                        tokens.push(SpannedToken { token: Token::And, span: Span { start, end: start + 1 } });
                     }
                 }
                 '!' => {
                     self.chars.next();
-                    let a = self.chars.peek();
-                    match a {
-                        Some('=') => {
-                            tokens.push(Token::NotEq);
-                            self.chars.next();
-                        }
-                        _ => {
-                            tokens.push(Token::Bang);
-                        }
+                    if let Some(&(_, '=')) = self.chars.peek() {
+                        self.chars.next();
+                        tokens.push(SpannedToken { token: Token::NotEq, span: Span { start, end: start + 2 } });
+                    } else {
+                        tokens.push(SpannedToken { token: Token::Bang, span: Span { start, end: start + 1 } });
                     }
                 }
                 '=' => {
                     self.chars.next();
-                    let a = self.chars.peek();
-                    match a {
-                        Some('=') => {
-                            tokens.push(Token::EqEq);
-                            self.chars.next();
-                        }
-                        _ => {
-                            tokens.push(Token::Assign);
-                        }
+                    if let Some(&(_, '=')) = self.chars.peek() {
+                        self.chars.next();
+                        tokens.push(SpannedToken { token: Token::EqEq, span: Span { start, end: start + 2 } });
+                    } else {
+                        tokens.push(SpannedToken { token: Token::Assign, span: Span { start, end: start + 1 } });
                     }
                 }
                 '|' => {
                     self.chars.next();
-                    let a = self.chars.peek();
-                    match a {
-                        Some('|') => {
-                            tokens.push(Token::OrOr);
-                            self.chars.next();
-                        }
-                        _ => {
-                            tokens.push(Token::Pipe);
-                        }
+                    if let Some(&(_, '|')) = self.chars.peek() {
+                        self.chars.next();
+                        tokens.push(SpannedToken { token: Token::OrOr, span: Span { start, end: start + 2 } });
+                    } else {
+                        tokens.push(SpannedToken { token: Token::Pipe, span: Span { start, end: start + 1 } });
                     }
                 }
                 '>' => {
                     self.chars.next();
-                    let a = self.chars.peek();
-                    match a {
-                        Some('>') => {
-                            tokens.push(Token::Append);
-                            self.chars.next();
-                        }
-                        _ => {
-                            tokens.push(Token::RdrctOut);
-                        }
+                    if let Some(&(_, '>')) = self.chars.peek() {
+                        self.chars.next();
+                        tokens.push(SpannedToken { token: Token::Append, span: Span { start, end: start + 2 } });
+                    } else {
+                        tokens.push(SpannedToken { token: Token::RdrctOut, span: Span { start, end: start + 1 } });
                     }
                 }
                 '#' => {
                     self.chars.next();
-                    while let Some(&ch) = self.chars.peek() {
+                    while let Some(&(_, ch)) = self.chars.peek() {
                         if ch == '\n' {
                             break;
                         } else {
@@ -195,57 +192,58 @@ impl <'a> Lexer <'a> {
                     }
                 }
                 '$' => {
-                    tokens.push(Token::Eval);
                     self.chars.next();
-                    while let Some(&ch) = self.chars.peek() {
+                    tokens.push(SpannedToken { token: Token::Eval, span: Span { start, end: start + 1 } });
+                    
+                    while let Some(&(inner_start, ch)) = self.chars.peek() {
                         match ch { 
                             ' ' | '\n' | '\t' | '\r' => {
                                 self.chars.next();
                             } 
                             '{' => {
-                                tokens.push(Token::LBrc);
                                 self.chars.next();
+                                tokens.push(SpannedToken { token: Token::LBrc, span: Span { start: inner_start, end: inner_start + 1 } });
                             }
                             '}' => {
-                                tokens.push(Token::RBrc);
                                 self.chars.next();
+                                tokens.push(SpannedToken { token: Token::RBrc, span: Span { start: inner_start, end: inner_start + 1 } });
                                 break;
                             }
                             '(' => {
-                                tokens.push(Token::LPths);
                                 self.chars.next();
+                                tokens.push(SpannedToken { token: Token::LPths, span: Span { start: inner_start, end: inner_start + 1 } });
                             }
                             ')' => {
-                                tokens.push(Token::RPths);
                                 self.chars.next();
+                                tokens.push(SpannedToken { token: Token::RPths, span: Span { start: inner_start, end: inner_start + 1 } });
                             }
                             '+' => {
-                                tokens.push(Token::Plus);
                                 self.chars.next();
+                                tokens.push(SpannedToken { token: Token::Plus, span: Span { start: inner_start, end: inner_start + 1 } });
                             }
                             '-' => {
-                                tokens.push(Token::Minus);
                                 self.chars.next();
+                                tokens.push(SpannedToken { token: Token::Minus, span: Span { start: inner_start, end: inner_start + 1 } });
                             }
                             '*' => {
-                                tokens.push(Token::Multiply);
                                 self.chars.next();
+                                tokens.push(SpannedToken { token: Token::Multiply, span: Span { start: inner_start, end: inner_start + 1 } });
                             }
                             '/' => {
-                                tokens.push(Token::Divide);
                                 self.chars.next();
+                                tokens.push(SpannedToken { token: Token::Divide, span: Span { start: inner_start, end: inner_start + 1 } });
                             }
                             '%' => {
-                                tokens.push(Token::Modulo);
                                 self.chars.next();
+                                tokens.push(SpannedToken { token: Token::Modulo, span: Span { start: inner_start, end: inner_start + 1 } });
                             }
                             '^' => {
-                                tokens.push(Token::Power);
                                 self.chars.next();
+                                tokens.push(SpannedToken { token: Token::Power, span: Span { start: inner_start, end: inner_start + 1 } });
                             }
                             _ => {
                                 let mut word = String::new();
-                                while let Some(&mw) = self.chars.peek() {
+                                while let Some(&(_, mw)) = self.chars.peek() {
                                     match mw {
                                           ' ' | '\n' | '\t'| '\r'
                                         | '+' | '-'  | '*' | '{' | '(' 
@@ -255,24 +253,36 @@ impl <'a> Lexer <'a> {
                                         _ => {
                                             word.push(mw);
                                             self.chars.next();
-                                        }                                     
+                                        }                                      
                                     }
                                 }
-                                if Self::is_number(&word) {
-                                    let num: i64 = word.parse().unwrap();
-                                    tokens.push(Token::Num(num));
+                                
+                                let inner_end = self.pos();
+                                let token = if Self::is_decimal(&word) {
+                                    if let Ok(num) = word.parse::<f64>() {
+                                        Token::Float(num)
+                                    } else {
+                                        Token::Word(word)
+                                    }
+                                } else if Self::is_number(&word) {
+                                    if let Ok(num) = word.parse::<i64>() {
+                                        Token::Num(num)
+                                    } else {
+                                        Token::Word(word)
+                                    }
                                 } else {
-                                    tokens.push(Token::Word(word));
-                                }
+                                    Token::Word(word)
+                                };
+                                
+                                tokens.push(SpannedToken { token, span: Span { start: inner_start, end: inner_end } });
                             }
                         }
                     } 
                 }
                 _ => {
                     let mut word = String::new();
-                    while let Some(&ch) = self.chars.peek() {
+                    while let Some(&(_, ch)) = self.chars.peek() {
                         match ch {
-
                               ' ' | '\n' | '\t' | '\r' | '"' | '='
                             | ';' | ','  | '&'  | '|'  | '!' | '#'
                             | '>' | '{'  | '}'  | '['  | ']' | '$' | '<' => { 
@@ -280,7 +290,7 @@ impl <'a> Lexer <'a> {
                             }
                             '\\' => {
                                 self.chars.next();
-                                if let Some(&ch) = self.chars.peek() {
+                                if let Some(&(_, ch)) = self.chars.peek() {
                                     word.push(ch);
                                     self.chars.next();
                                 }
@@ -291,76 +301,50 @@ impl <'a> Lexer <'a> {
                             }
                         }
                     }
-                    match word.as_str() {
-                        "let" => {
-                            tokens.push(Token::Let);
-                        }
-                        "print" => {
-                            tokens.push(Token::Print);
-                        }
-                        "if" => {
-                            tokens.push(Token::If);
-                        }
-                        "elif" => {
-                            tokens.push(Token::Elif);
-                        }
-                        "else" => {
-                            tokens.push(Token::Else);
-                        }
-                        "for" => {
-                            tokens.push(Token::For);
-                        }
-                        "while" => {
-                            tokens.push(Token::While);
-                        }
-                        "in" => {
-                            tokens.push(Token::In);
-                        }
-                        "to" => {
-                            tokens.push(Token::To);
-                        }
-                        "break" => {
-                            tokens.push(Token::Break);
-                        }                        
-                        "true" => {
-                            tokens.push(Token::True);
-                        }
-                        "false" => {
-                            tokens.push(Token::False);
-                        }
-                        // "-eq" => {
-                        //     tokens.push(Token::EqualTo);
-                        // }
-                        // "-le" => {
-                        //     tokens.push(Token::LessEqual);
-                        // }
-                        // "-lt" => {
-                        //     tokens.push(Token::LessThan);
-                        // }
-                        // "-ge" => {
-                        //     tokens.push(Token::GreaterEqual);
-                        // }
-                        // "-gt" => {
-                        //     tokens.push(Token::GreaterThan);
-                        // }
+                    
+                    let end = self.pos();
+                    let token = match word.as_str() {
+                        "let" => Token::Let,
+                        "print" => Token::Print,
+                        "if" => Token::If,
+                        "elif" => Token::Elif,
+                        "else" => Token::Else,
+                        "for" => Token::For,
+                        "while" => Token::While,
+                        "in" => Token::In,
+                        "to" => Token::To,
+                        "break" => Token::Break,
+                        "true" => Token::True,
+                        "false" => Token::False,
                         _ => {
-                            if Self::is_number(&word) {
-                                let num: i64 = word.parse().unwrap();
-                                tokens.push(Token::Num(num));
+                            if Self::is_decimal(&word) {
+                                if let Ok(num) = word.parse::<f64>() {
+                                    Token::Float(num)
+                                } else {
+                                    Token::Word(word)
+                                }
+                            } else if Self::is_number(&word) {
+                                if let Ok(num) = word.parse::<i64>() {
+                                    Token::Num(num)
+                                } else {
+                                    Token::Word(word)
+                                }
                             } else {
-                                tokens.push(Token::Word(word));
+                                Token::Word(word)
                             }
                         }
-                    }
+                    };
+                    
+                    tokens.push(SpannedToken { token, span: Span { start, end } });
                 }
             }
         }
-        tokens.push(Token::EOF);
+        
+        tokens.push(SpannedToken {
+            token: Token::EOF,
+            span: Span { start: self.input_len, end: self.input_len },
+        });
+        
         tokens
     }
 }
-//
-// :) = String::from("bye");
-// EOF :)
-// 
-

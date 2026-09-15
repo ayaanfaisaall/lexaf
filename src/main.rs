@@ -1,32 +1,14 @@
-//
-// let mut s = String::from("artix, nvim, hyprland & rust");
-// let mut :) = format!("i use {} btw", s);
-//
-// second try to write a tokenizer for my shell called
-// afsh, on the first try i wrote a tokenizer which was 
-// a language first tokenizer, this time it is a shell 
-// first tokenizer, its phiosophy is:
-//
-//      "everything is a word with an exception 
-//       to strings, punctuation, logical and 
-//       the shell operators and the brackets"
-//
-//  written by:
-// -ayaanfaisaall :) 
-//
 #[cfg(test)]
 mod tests;
 use lexaf::lexer:: {
     Lexer
 };
-//
-// s = String::from("its just a replacement to f*ck");
-// :) = format!("i know it doesn't work", {});
-// println!("it worked, fsck /dev/null, ({})", :) );
-//
+
 fn main() {
     let file = String::from("cat ~/Downloads/abc/dc.jpg | okay --l > jj --help>> hhff{k} | echo \"my name is {name}\" ");
-    let file2 = String::from(r#"let n1 = 43
+    let file2 = String::from(r#"let n1 = -43
+                              -8888.88
+                              88.88.77
                               print "{n1}"
                               #
                               # i know ky n1-eq43 kaam nhi kry ga kyu ky wo aik hi token bny ga 
@@ -59,7 +41,3 @@ fn main() {
     tokens = lexer.tokenize();
     println!("{:?}", tokens);
 }
-//
-// :) = String::from("bye");
-// EOF :)
-// 

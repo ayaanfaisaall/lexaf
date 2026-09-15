@@ -2,6 +2,6 @@ pub mod tokens;
 pub mod lexer;
 
 pub use tokens::{
-    Token, StrIntr
+    Span, SpannedToken, Token, StrIntr
 };
 pub use lexer::Lexer;
