@@ -111,61 +111,15 @@ impl<'a> Lexer<'a> {
                             }
                         }
                     }
-
                     if !lit.is_empty() {
                         str_tokens.push(StrIntr::Literal(lit));
                     }
-                    
                     let end = self.pos();
                     tokens.push(SpannedToken {
                         token: Token::Str(str_tokens),
                         span: Span { start, end },
                     });
                 }
-                // '"' => {
-                //     self.chars.next();
-                //     let mut str = Vec::new();
-                //     let mut lit = String::new();
-                //
-                //     while let Some(&(_, ch)) = self.chars.peek() {
-                //         if ch == '"' {
-                //             self.chars.next();
-                //             break;
-                //         } else if ch == '{' {
-                //             lit.push(ch);
-                //             self.chars.next();
-                //             let mut var = String::new();
-                //             while let Some(&(_, v)) = self.chars.peek() {
-                //                 if v == '}' {
-                //                     lit.push(v);
-                //                     self.chars.next();
-                //                     break;
-                //                 } else if v == '"' {
-                //                     return Err(LexafError::UnclosedDelimiter {
-                //                         delimiter: "}".to_string(),
-                //                         span: (start..self.pos).into(), 
-                //                     });
-                //                     // self.chars.next();
-                //                     // break;
-                //                 } else {
-                //                     var.push(v);
-                //                     self.chars.next();
-                //                 }
-                //             }
-                //             str.push(StrIntr::Variable(var));
-                //         } else {
-                //             lit.push(ch);
-                //             self.chars.next();
-                //         }
-                //     }
-                //     str.push(StrIntr::Literal(lit));
-                //
-                //     let end = self.pos();
-                //     tokens.push(SpannedToken {
-                //         token: Token::Str(str),
-                //         span: Span { start, end },
-                //     });
-                // }
                 ';' => {
                     self.chars.next();
                     tokens.push(SpannedToken { token: Token::SemiCln, span: Span { start, end: start + 1 } });
