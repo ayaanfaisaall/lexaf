@@ -25,20 +25,92 @@ cargo add lexaf
 Using `lexaf` is incredibly simple. Just instantiate the `Lexer` with a string slice and call the `tokenize()` method.
 
 ```rust
-use lexaf::Lexer;
+use lexaf::{
+    Lexer,
+    Report,
+};
 
 fn main() {
     let any_str = String::from(r#"let a = "this is lexaf"; print "{a}" "#);
     let mut lexer = Lexer::new(&any_str);
-    let tokens = lexer.tokenize();
-    println!("{:?}", tokens);
+    match lexer.tokenize() {
+        Ok(tokens) => println!("{:#?}", tokens),
+        Err(e) => {
+            let error = Report::new(e).with_source_code(buffer.to_string());
+            println!("{:?}", error);
+        }
+    }
 }
 ```
 
 ### Output
 
 ```rust
-[Let, Word("a"), Assign, Str([Literal("this is lexaf")]), SemiCln, Print, Str([Variable("a"), Literal("{}")]), EOF]
+[
+    SpannedToken {
+        token: Let,
+        span: Span {
+            start: 0,
+            end: 3,
+        },
+    },
+    SpannedToken {
+        token: Word(
+            "a",
+        ),
+        span: Span {
+            start: 4,
+            end: 5,
+        },
+    },
+    SpannedToken {
+        token: Assign,
+        span: Span {
+            start: 6,
+            end: 7,
+        },
+    },
+    SpannedToken {
+        token: Str(
+            [
+                Literal(
+                    "this is lexaf",
+                ),
+            ],
+        ),
+        span: Span {
+            start: 8,
+            end: 23,
+        },
+    },
+    SpannedToken {
+        token: SemiCln,
+        span: Span {
+            start: 23,
+            end: 24,
+        },
+    },
+    SpannedToken {
+        token: Print,
+        span: Span {
+            start: 25,
+            end: 30,
+        },
+    },
+    SpannedToken {
+        token: Str(
+            [
+                Variable(
+                    "a",
+                ),
+            ],
+        ),
+        span: Span {
+            start: 31,
+            end: 36,
+        },
+    },
+]
 ```
 
 ## Tokens
@@ -52,6 +124,22 @@ fn main() {
 * **Logical & Assignment:** `Assign =`, `AndAnd &&`, `OrOr ||`, `EqEq ==`, `Bang !`, `And &`
 * **Keywords:** `Let`, `Print`, `If`, `Elif`, `Else`, `For`, `While`, `In`, `To`, `Break`, `True`, `False`
 * **Math:** `Plus`, `Minus`, `Multiply`, `Divide`, `Modulo`, `Power`, `LPths (`, `RPths )`
+
+## Spans
+
+Every token emitted by `lexaf` is returned as a `SpannedToken`, which bundles the core token variant with a `Span` struct detailing its exact byte location in the original string:
+
+```rust
+pub struct Span {
+    pub start: usize,
+    pub end: usize,
+}
+```
+
+This `Span` tracking is a critical foundation for the subsequent steps of the shell pipeline. It allows developers to:
+* **Provide Rich Error Diagnostics:** Pinpoint exact character ranges where syntax errors or runtime issues occur (e.g., using crates like `miette` or `ariadne` for visual error reporting).
+* **Preserve Source Mapping:** Trace interpreted or tokenized structures back to their origin in user-written scripts.
+* **Enable Syntax Highlighting:** Accurately apply colorization and formatting rules based on the original token's exact location.
 
 ## Challenges
 

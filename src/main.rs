@@ -6,7 +6,8 @@ use lexaf::lexer:: {
 
 fn main() {
     let file = String::from("cat ~/Downloads/abc/dc.jpg | okay --l > jj --help>> hhff{k} | echo \"my name is {name}\" ");
-    let file2 = String::from(r#"let n1 = -43
+    let file2 = String::from(r#"let a = "this is lexaf"; print "{a}"
+                              let n1 = -43
                               -8888.88
                               88.88.77
                               print "{n1}"
@@ -36,8 +37,8 @@ fn main() {
                               theme 3 && waybar; hyprpaper& "#);
     let mut lexer = Lexer::new(&file);
     let mut tokens = lexer.tokenize();
-    println!("{:?}\n", tokens);
+    println!("{:#?}\n", tokens);
     lexer = Lexer::new(&file2);
     tokens = lexer.tokenize();
-    println!("{:?}", tokens);
+    println!("{:#?}", tokens);
 }
