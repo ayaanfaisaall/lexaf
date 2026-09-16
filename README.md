@@ -36,7 +36,7 @@ fn main() {
     match lexer.tokenize() {
         Ok(tokens) => println!("{:#?}", tokens),
         Err(e) => {
-            let error = Report::new(e).with_source_code(buffer.to_string());
+            let error = Report::new(e).with_source_code(any_str.to_string());
             println!("{:?}", error);
         }
     }
