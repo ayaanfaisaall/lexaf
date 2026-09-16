@@ -127,7 +127,7 @@ fn main() {
 
 ## Custom Errors
 
-`parsaf` uses `miette` for presenting the errors. A sample output is:
+`lexaf` uses `miette` for presenting the errors. A sample output is:
 
 ```rust
 afsh::lexaf::unclosed_delimiter
