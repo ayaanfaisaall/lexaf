@@ -2,12 +2,13 @@
 mod tests {
     use lexaf::lexer::Lexer; 
     use lexaf::tokens::{Token, StrIntr, SpannedToken, Span};
+    use lexaf::error::LexafError;
 
     #[test]
     fn test_colon_and_urls() {
         let input = "ping https://www.ayaanfaisaall.cc";
         let mut lexer = Lexer::new(&input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
         assert_eq!(
             tokens,
             vec![
@@ -22,7 +23,7 @@ mod tests {
     fn test_file_paths_and_dots() {
         let input = "git add . && cat ~/Downloads/abc/dc.jpg";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -42,7 +43,7 @@ mod tests {
     fn test_variable_declaration() {
         let input = "let n1 = 43\n";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -61,7 +62,7 @@ mod tests {
     fn test_for_loop_with_to() {
         let input = "for i in 0 to 10 { break }";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -84,7 +85,7 @@ mod tests {
     fn test_math_evaluation_block() {
         let input = "${ 84 - (44 -43) * 34 }";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -110,15 +111,15 @@ mod tests {
     fn test_string_interpolation_and_escapes() {
         let input = r#"print "name: {name}" | awk '\{print\}'"#;
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
             vec![
                 SpannedToken { token: Token::Print, span: Span { start: 0, end: 5 } },
                 SpannedToken { token: Token::Str(vec![
+                    StrIntr::Literal(String::from("name: ")),
                     StrIntr::Variable(String::from("name")),
-                    StrIntr::Literal(String::from("name: {}")),
                 ]), span: Span { start: 6, end: 20 } },
                 SpannedToken { token: Token::Pipe, span: Span { start: 21, end: 22 } },
                 SpannedToken { token: Token::Word(String::from("awk")), span: Span { start: 23, end: 26 } },
@@ -132,7 +133,7 @@ mod tests {
     fn test_comments_are_ignored() {
         let input = "print 1 # this is a comment\nprint 2";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -151,7 +152,7 @@ mod tests {
     fn test_logical_and_redirections() {
         let input = "okay --l > jj --help>> hhff < in.txt";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -174,7 +175,7 @@ mod tests {
     fn test_if_elif_else_flow() {
         let input = "if n1 -eq 43 { print \"yes\" } elif n1 -le 23 { print \"no\" } else { print \"maybe\" }";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -209,7 +210,7 @@ mod tests {
     fn test_while_loop_with_booleans() {
         let input = "while true { break } while false { }";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -232,7 +233,7 @@ mod tests {
     fn test_all_comparison_operators() {
         let input = "a -lt b -ge c -gt d";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -253,7 +254,7 @@ mod tests {
     fn test_mixed_logical_and_shell_operators() {
         let input = "if false || true && n1 -gt 5 { theme 4 }";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -273,5 +274,33 @@ mod tests {
                 SpannedToken { token: Token::EOF, span: Span { start: 40, end: 40 } },
             ]
         );
+    }
+
+    #[test]
+    fn test_unclosed_string_error() {
+        let input = r#"let a = "unclosed"#;
+        let mut lexer = Lexer::new(input);
+        let result = lexer.tokenize();
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            LexafError::UnclosedDelimiter { delimiter, .. } => {
+                assert_eq!(delimiter, "\"");
+            }
+        }
+    }
+
+    #[test]
+    fn test_unclosed_interpolation_error() {
+        let input = r#"let a = "hello {name""#;
+        let mut lexer = Lexer::new(input);
+        let result = lexer.tokenize();
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            LexafError::UnclosedDelimiter { delimiter, .. } => {
+                assert_eq!(delimiter, "}");
+            }
+        }
     }
 }

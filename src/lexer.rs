@@ -2,6 +2,7 @@ use std::{
     iter::Peekable,
     str::CharIndices,
 };
+use crate::error::LexafError;
 use crate::tokens::{
     Span,
     Token,
@@ -53,7 +54,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Processes the input character stream and builds a vector of spanned tokens.
-    pub fn tokenize(&mut self) -> Vec<SpannedToken> {
+    pub fn tokenize(&mut self) -> Result<Vec<SpannedToken>, LexafError> {
         let mut tokens = Vec::new();
         
         while let Some(&(start, c)) = self.chars.peek() {
@@ -69,45 +70,102 @@ impl<'a> Lexer<'a> {
                     });
                 }
                 '"' => {
-                    self.chars.next();
-                    let mut str = Vec::new();
+                    self.chars.next(); 
+                    let mut str_tokens = Vec::new();
                     let mut lit = String::new();
-                    
-                    while let Some(&(_, ch)) = self.chars.peek() {
-                        if ch == '"' {
-                            self.chars.next();
-                            break;
-                        } else if ch == '{' {
-                            lit.push(ch);
-                            self.chars.next();
-                            let mut var = String::new();
-                            while let Some(&(_, v)) = self.chars.peek() {
-                                if v == '}' {
-                                    lit.push(v);
-                                    self.chars.next();
-                                    break;
-                                } else if v == '"' {
-                                    self.chars.next();
-                                    break;
-                                } else {
-                                    var.push(v);
-                                    self.chars.next();
+                    loop {
+                        match self.chars.next() {
+                            Some((_, '"')) => break,
+                            Some((_, '{')) => {
+                                if !lit.is_empty() {
+                                    str_tokens.push(StrIntr::Literal(lit.clone()));
+                                    lit.clear(); 
                                 }
+                                let mut var = String::new();
+                                loop {
+                                    match self.chars.next() {
+                                        Some((_, '}')) => break,
+                                        Some((_, '"')) => {
+                                            return Err(LexafError::UnclosedDelimiter {
+                                                delimiter: "}".to_string(),
+                                                span: (start..self.pos()).into(),
+                                            });
+                                        }
+                                        Some((_, v)) => var.push(v),
+                                        None => {
+                                            return Err(LexafError::UnclosedDelimiter {
+                                                delimiter: "}".to_string(),
+                                                span: (start..self.pos()).into(),
+                                            });
+                                        }
+                                    }
+                                }
+                                str_tokens.push(StrIntr::Variable(var));
                             }
-                            str.push(StrIntr::Variable(var));
-                        } else {
-                            lit.push(ch);
-                            self.chars.next();
+                            Some((_, ch)) => lit.push(ch),
+                            None => {
+                                return Err(LexafError::UnclosedDelimiter {
+                                    delimiter: "\"".to_string(),
+                                    span: (start..self.pos()).into(),
+                                });
+                            }
                         }
                     }
-                    str.push(StrIntr::Literal(lit));
+
+                    if !lit.is_empty() {
+                        str_tokens.push(StrIntr::Literal(lit));
+                    }
                     
                     let end = self.pos();
                     tokens.push(SpannedToken {
-                        token: Token::Str(str),
+                        token: Token::Str(str_tokens),
                         span: Span { start, end },
                     });
                 }
+                // '"' => {
+                //     self.chars.next();
+                //     let mut str = Vec::new();
+                //     let mut lit = String::new();
+                //
+                //     while let Some(&(_, ch)) = self.chars.peek() {
+                //         if ch == '"' {
+                //             self.chars.next();
+                //             break;
+                //         } else if ch == '{' {
+                //             lit.push(ch);
+                //             self.chars.next();
+                //             let mut var = String::new();
+                //             while let Some(&(_, v)) = self.chars.peek() {
+                //                 if v == '}' {
+                //                     lit.push(v);
+                //                     self.chars.next();
+                //                     break;
+                //                 } else if v == '"' {
+                //                     return Err(LexafError::UnclosedDelimiter {
+                //                         delimiter: "}".to_string(),
+                //                         span: (start..self.pos).into(), 
+                //                     });
+                //                     // self.chars.next();
+                //                     // break;
+                //                 } else {
+                //                     var.push(v);
+                //                     self.chars.next();
+                //                 }
+                //             }
+                //             str.push(StrIntr::Variable(var));
+                //         } else {
+                //             lit.push(ch);
+                //             self.chars.next();
+                //         }
+                //     }
+                //     str.push(StrIntr::Literal(lit));
+                //
+                //     let end = self.pos();
+                //     tokens.push(SpannedToken {
+                //         token: Token::Str(str),
+                //         span: Span { start, end },
+                //     });
+                // }
                 ';' => {
                     self.chars.next();
                     tokens.push(SpannedToken { token: Token::SemiCln, span: Span { start, end: start + 1 } });
@@ -345,6 +403,6 @@ impl<'a> Lexer<'a> {
             span: Span { start: self.input_len, end: self.input_len },
         });
         
-        tokens
+        Ok(tokens)
     }
 }

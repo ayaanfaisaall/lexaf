@@ -12,3 +12,5 @@ name = "lexaf"
 path = "src/lib.rs"
 
 [dependencies]
+miette = { version = "7.0", features = ["fancy"] }
+thiserror = "1.0"
