@@ -1,6 +1,6 @@
 use std::fmt;
 
-impl fmt::Display for Token {
+impl<'a> fmt::Display for Token<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             // General values
@@ -29,8 +29,12 @@ impl fmt::Display for Token {
             // Shell operators
             Token::Pipe => write!(f, "|"),
             Token::RdrctIn => write!(f, "<"),
-            Token::RdrctOut => write!(f, ">"),
-            Token::Append => write!(f, ">>"),
+            Token::RdrctBoth => write!(f, ">"),
+            Token::AppendBoth => write!(f, ">>"),
+            Token::RdrctOut => write!(f, "o>"),
+            Token::RdrctErr => write!(f, "e>"),
+            Token::AppendOut => write!(f, "o>>"),
+            Token::AppendErr => write!(f, "e>>"),
             
             // Brackets
             Token::LBrc => write!(f, "{{"),
@@ -77,8 +81,8 @@ pub struct Span {
 
 /// A Token paired with its location in the source code.
 #[derive(Debug, Clone, PartialEq)]
-pub struct SpannedToken {
-    pub token: Token,
+pub struct SpannedToken<'a> {
+    pub token: Token<'a>,
     pub span: Span,
 }
 
@@ -87,10 +91,10 @@ pub struct SpannedToken {
 /// Note: `()` (parentheses) are intentionally not allowed in the general shell 
 /// language and do not have tokens outside of specific evaluation contexts (like `${ }`).
 #[derive(Debug, Clone, PartialEq)]
-pub enum Token {
+pub enum Token<'a> {
     // general
-    Word(String),
-    Str(Vec<StrIntr>),
+    Word(&'a str),
+    Str(Vec<StrIntr<'a>>),
     Num(i64),
     Float(f64),
     
@@ -115,9 +119,13 @@ pub enum Token {
     
     // shell operators
     Pipe,
-    RdrctIn,
-    RdrctOut,
-    Append,
+    RdrctIn,    // <
+    RdrctOut,   // o>
+    RdrctErr,   // e>
+    RdrctBoth,  // >
+    AppendOut,  // o>>
+    AppendErr,  // e>>
+    AppendBoth, // >>
     
     // brackets
     LBrc,
@@ -155,7 +163,7 @@ pub enum Token {
 
 /// Represents a segment of an interpolated string (either plain text or a variable).
 #[derive(Debug, Clone, PartialEq)]
-pub enum StrIntr {
-    Literal(String),
-    Variable(String),
+pub enum StrIntr<'a> {
+    Literal(&'a str),
+    Variable(&'a str),
 }

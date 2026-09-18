@@ -1,6 +1,6 @@
 # lexaf
 
-A simple lexical analyzer (tokenizer) for `afsh` (a shell).
+A simple zero-copy lexical analyzer (tokenizer) for `afsh` (a shell).
 
 Tokenizing is the "dumbest but fastest" step in this shell's pipeline. `lexaf` doesn't know whether a word is an external binary, a shell builtin, or an argument—it simply reads raw text and categorizes it into structured tokens (words, language keywords, strings, punctuation, and operators) so the parser can make sense of it later.
 
@@ -159,7 +159,7 @@ This `Span` tracking is a critical foundation for the subsequent steps of the sh
 
 ## Challenges
 
-During the coding of this lexer, i had no internet and no connection to the outer world, so i coded all of this from my mind and a little bit offline documention i had. Hence it might not be perfectly optimized, but it does the work perfectly for which it was written.
+During the coding of first working version this lexer (August 2026), i had no internet and no connection to the outer world, so i coded all of this from my mind and a little bit offline documention i had. Hence it might not be perfectly optimized, but it does the work perfectly for which it was written.
 I was at my homeland AJK, where government had disabled all sort of internet due to some public protests.
 
 ## License

@@ -12,8 +12,8 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                SpannedToken { token: Token::Word(String::from("ping")), span: Span { start: 0, end: 4 } },
-                SpannedToken { token: Token::Word(String::from("https://www.ayaanfaisaall.cc")), span: Span { start: 5, end: 33 } },
+                SpannedToken { token: Token::Word("ping"), span: Span { start: 0, end: 4 } },
+                SpannedToken { token: Token::Word("https://www.ayaanfaisaall.cc"), span: Span { start: 5, end: 33 } },
                 SpannedToken { token: Token::EOF, span: Span { start: 33, end: 33 } },
             ]
         );
@@ -28,12 +28,12 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                SpannedToken { token: Token::Word(String::from("git")), span: Span { start: 0, end: 3 } },
-                SpannedToken { token: Token::Word(String::from("add")), span: Span { start: 4, end: 7 } },
-                SpannedToken { token: Token::Word(String::from(".")), span: Span { start: 8, end: 9 } },
+                SpannedToken { token: Token::Word("git"), span: Span { start: 0, end: 3 } },
+                SpannedToken { token: Token::Word("add"), span: Span { start: 4, end: 7 } },
+                SpannedToken { token: Token::Word("."), span: Span { start: 8, end: 9 } },
                 SpannedToken { token: Token::AndAnd, span: Span { start: 10, end: 12 } },
-                SpannedToken { token: Token::Word(String::from("cat")), span: Span { start: 13, end: 16 } },
-                SpannedToken { token: Token::Word(String::from("~/Downloads/abc/dc.jpg")), span: Span { start: 17, end: 39 } },
+                SpannedToken { token: Token::Word("cat"), span: Span { start: 13, end: 16 } },
+                SpannedToken { token: Token::Word("~/Downloads/abc/dc.jpg"), span: Span { start: 17, end: 39 } },
                 SpannedToken { token: Token::EOF, span: Span { start: 39, end: 39 } },
             ]
         );
@@ -49,7 +49,7 @@ mod tests {
             tokens,
             vec![
                 SpannedToken { token: Token::Let, span: Span { start: 0, end: 3 } },
-                SpannedToken { token: Token::Word(String::from("n1")), span: Span { start: 4, end: 6 } },
+                SpannedToken { token: Token::Word("n1"), span: Span { start: 4, end: 6 } },
                 SpannedToken { token: Token::Assign, span: Span { start: 7, end: 8 } },
                 SpannedToken { token: Token::Num(43), span: Span { start: 9, end: 11 } },
                 SpannedToken { token: Token::NewLine, span: Span { start: 11, end: 12 } },
@@ -68,7 +68,7 @@ mod tests {
             tokens,
             vec![
                 SpannedToken { token: Token::For, span: Span { start: 0, end: 3 } },
-                SpannedToken { token: Token::Word(String::from("i")), span: Span { start: 4, end: 5 } },
+                SpannedToken { token: Token::Word("i"), span: Span { start: 4, end: 5 } },
                 SpannedToken { token: Token::In, span: Span { start: 6, end: 8 } },
                 SpannedToken { token: Token::Num(0), span: Span { start: 9, end: 10 } },
                 SpannedToken { token: Token::To, span: Span { start: 11, end: 13 } },
@@ -109,7 +109,7 @@ mod tests {
 
     #[test]
     fn test_string_interpolation_and_escapes() {
-        let input = r#"print "name: {name}" | awk '\{print\}'"#;
+        let input = r#"print "name: {name}" | awk '{print}'"#;
         let mut lexer = Lexer::new(input);
         let tokens = lexer.tokenize().unwrap();
 
@@ -118,13 +118,15 @@ mod tests {
             vec![
                 SpannedToken { token: Token::Print, span: Span { start: 0, end: 5 } },
                 SpannedToken { token: Token::Str(vec![
-                    StrIntr::Literal(String::from("name: ")),
-                    StrIntr::Variable(String::from("name")),
+                    StrIntr::Literal("name: "),
+                    StrIntr::Variable("name"),
                 ]), span: Span { start: 6, end: 20 } },
                 SpannedToken { token: Token::Pipe, span: Span { start: 21, end: 22 } },
-                SpannedToken { token: Token::Word(String::from("awk")), span: Span { start: 23, end: 26 } },
-                SpannedToken { token: Token::Word(String::from("'{print}'")), span: Span { start: 27, end: 38 } },
-                SpannedToken { token: Token::EOF, span: Span { start: 38, end: 38 } },
+                SpannedToken { token: Token::Word("awk"), span: Span { start: 23, end: 26 } },
+                SpannedToken { token: Token::Str(vec![
+                    StrIntr::Literal("{print}")
+                ]), span: Span { start: 27, end: 36 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 36, end: 36 } },
             ]
         );
     }
@@ -150,23 +152,24 @@ mod tests {
 
     #[test]
     fn test_logical_and_redirections() {
-        let input = "okay --l > jj --help>> hhff < in.txt";
+        let input = "okay o> out.txt e>> err.txt abco>>file < in.txt";
         let mut lexer = Lexer::new(input);
         let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
             vec![
-                SpannedToken { token: Token::Word(String::from("okay")), span: Span { start: 0, end: 4 } },
-                SpannedToken { token: Token::Word(String::from("--l")), span: Span { start: 5, end: 8 } },
-                SpannedToken { token: Token::RdrctOut, span: Span { start: 9, end: 10 } },
-                SpannedToken { token: Token::Word(String::from("jj")), span: Span { start: 11, end: 13 } },
-                SpannedToken { token: Token::Word(String::from("--help")), span: Span { start: 14, end: 20 } },
-                SpannedToken { token: Token::Append, span: Span { start: 20, end: 22 } },
-                SpannedToken { token: Token::Word(String::from("hhff")), span: Span { start: 23, end: 27 } },
-                SpannedToken { token: Token::RdrctIn, span: Span { start: 28, end: 29 } },
-                SpannedToken { token: Token::Word(String::from("in.txt")), span: Span { start: 30, end: 36 } },
-                SpannedToken { token: Token::EOF, span: Span { start: 36, end: 36 } },
+                SpannedToken { token: Token::Word("okay"), span: Span { start: 0, end: 4 } },
+                SpannedToken { token: Token::RdrctOut, span: Span { start: 5, end: 7 } },
+                SpannedToken { token: Token::Word("out.txt"), span: Span { start: 8, end: 15 } },
+                SpannedToken { token: Token::AppendErr, span: Span { start: 16, end: 19 } },
+                SpannedToken { token: Token::Word("err.txt"), span: Span { start: 20, end: 27 } },
+                SpannedToken { token: Token::Word("abco"), span: Span { start: 28, end: 32 } },
+                SpannedToken { token: Token::AppendBoth, span: Span { start: 32, end: 34 } },
+                SpannedToken { token: Token::Word("file"), span: Span { start: 34, end: 38 } },
+                SpannedToken { token: Token::RdrctIn, span: Span { start: 39, end: 40 } },
+                SpannedToken { token: Token::Word("in.txt"), span: Span { start: 41, end: 47 } },
+                SpannedToken { token: Token::EOF, span: Span { start: 47, end: 47 } },
             ]
         );
     }
@@ -181,25 +184,25 @@ mod tests {
             tokens,
             vec![
                 SpannedToken { token: Token::If, span: Span { start: 0, end: 2 } },
-                SpannedToken { token: Token::Word(String::from("n1")), span: Span { start: 3, end: 5 } },
-                SpannedToken { token: Token::Word(String::from("-eq")), span: Span { start: 6, end: 9 } },
+                SpannedToken { token: Token::Word("n1"), span: Span { start: 3, end: 5 } },
+                SpannedToken { token: Token::Word("-eq"), span: Span { start: 6, end: 9 } },
                 SpannedToken { token: Token::Num(43), span: Span { start: 10, end: 12 } },
                 SpannedToken { token: Token::LBrc, span: Span { start: 13, end: 14 } },
                 SpannedToken { token: Token::Print, span: Span { start: 15, end: 20 } },
-                SpannedToken { token: Token::Str(vec![StrIntr::Literal(String::from("yes"))]), span: Span { start: 21, end: 26 } },
+                SpannedToken { token: Token::Str(vec![StrIntr::Literal("yes")]), span: Span { start: 21, end: 26 } },
                 SpannedToken { token: Token::RBrc, span: Span { start: 27, end: 28 } },
                 SpannedToken { token: Token::Elif, span: Span { start: 29, end: 33 } },
-                SpannedToken { token: Token::Word(String::from("n1")), span: Span { start: 34, end: 36 } },
-                SpannedToken { token: Token::Word(String::from("-le")), span: Span { start: 37, end: 40 } },
+                SpannedToken { token: Token::Word("n1"), span: Span { start: 34, end: 36 } },
+                SpannedToken { token: Token::Word("-le"), span: Span { start: 37, end: 40 } },
                 SpannedToken { token: Token::Num(23), span: Span { start: 41, end: 43 } },
                 SpannedToken { token: Token::LBrc, span: Span { start: 44, end: 45 } },
                 SpannedToken { token: Token::Print, span: Span { start: 46, end: 51 } },
-                SpannedToken { token: Token::Str(vec![StrIntr::Literal(String::from("no"))]), span: Span { start: 52, end: 56 } },
+                SpannedToken { token: Token::Str(vec![StrIntr::Literal("no")]), span: Span { start: 52, end: 56 } },
                 SpannedToken { token: Token::RBrc, span: Span { start: 57, end: 58 } },
                 SpannedToken { token: Token::Else, span: Span { start: 59, end: 63 } },
                 SpannedToken { token: Token::LBrc, span: Span { start: 64, end: 65 } },
                 SpannedToken { token: Token::Print, span: Span { start: 66, end: 71 } },
-                SpannedToken { token: Token::Str(vec![StrIntr::Literal(String::from("maybe"))]), span: Span { start: 72, end: 79 } },
+                SpannedToken { token: Token::Str(vec![StrIntr::Literal("maybe")]), span: Span { start: 72, end: 79 } },
                 SpannedToken { token: Token::RBrc, span: Span { start: 80, end: 81 } },
                 SpannedToken { token: Token::EOF, span: Span { start: 81, end: 81 } },
             ]
@@ -238,13 +241,13 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                SpannedToken { token: Token::Word(String::from("a")), span: Span { start: 0, end: 1 } },
-                SpannedToken { token: Token::Word(String::from("-lt")), span: Span { start: 2, end: 5 } },
-                SpannedToken { token: Token::Word(String::from("b")), span: Span { start: 6, end: 7 } },
-                SpannedToken { token: Token::Word(String::from("-ge")), span: Span { start: 8, end: 11 } },
-                SpannedToken { token: Token::Word(String::from("c")), span: Span { start: 12, end: 13 } },
-                SpannedToken { token: Token::Word(String::from("-gt")), span: Span { start: 14, end: 17 } },
-                SpannedToken { token: Token::Word(String::from("d")), span: Span { start: 18, end: 19 } },
+                SpannedToken { token: Token::Word("a"), span: Span { start: 0, end: 1 } },
+                SpannedToken { token: Token::Word("-lt"), span: Span { start: 2, end: 5 } },
+                SpannedToken { token: Token::Word("b"), span: Span { start: 6, end: 7 } },
+                SpannedToken { token: Token::Word("-ge"), span: Span { start: 8, end: 11 } },
+                SpannedToken { token: Token::Word("c"), span: Span { start: 12, end: 13 } },
+                SpannedToken { token: Token::Word("-gt"), span: Span { start: 14, end: 17 } },
+                SpannedToken { token: Token::Word("d"), span: Span { start: 18, end: 19 } },
                 SpannedToken { token: Token::EOF, span: Span { start: 19, end: 19 } },
             ]
         );
@@ -264,11 +267,11 @@ mod tests {
                 SpannedToken { token: Token::OrOr, span: Span { start: 9, end: 11 } },
                 SpannedToken { token: Token::True, span: Span { start: 12, end: 16 } },
                 SpannedToken { token: Token::AndAnd, span: Span { start: 17, end: 19 } },
-                SpannedToken { token: Token::Word(String::from("n1")), span: Span { start: 20, end: 22 } },
-                SpannedToken { token: Token::Word(String::from("-gt")), span: Span { start: 23, end: 26 } },
+                SpannedToken { token: Token::Word("n1"), span: Span { start: 20, end: 22 } },
+                SpannedToken { token: Token::Word("-gt"), span: Span { start: 23, end: 26 } },
                 SpannedToken { token: Token::Num(5), span: Span { start: 27, end: 28 } },
                 SpannedToken { token: Token::LBrc, span: Span { start: 29, end: 30 } },
-                SpannedToken { token: Token::Word(String::from("theme")), span: Span { start: 31, end: 36 } },
+                SpannedToken { token: Token::Word("theme"), span: Span { start: 31, end: 36 } },
                 SpannedToken { token: Token::Num(4), span: Span { start: 37, end: 38 } },
                 SpannedToken { token: Token::RBrc, span: Span { start: 39, end: 40 } },
                 SpannedToken { token: Token::EOF, span: Span { start: 40, end: 40 } },
@@ -286,7 +289,8 @@ mod tests {
         match result.unwrap_err() {
             LexafError::UnclosedDelimiter { delimiter, .. } => {
                 assert_eq!(delimiter, "\"");
-            }
+            },
+            _ => panic!("Expected UnclosedDelimiter error"),
         }
     }
 
@@ -300,7 +304,54 @@ mod tests {
         match result.unwrap_err() {
             LexafError::UnclosedDelimiter { delimiter, .. } => {
                 assert_eq!(delimiter, "}");
-            }
+            },
+            _ => panic!("Expected UnclosedDelimiter error"),
+        }
+    }
+
+    #[test]
+    fn test_eval_block_oper_not_allowed() {
+        let input = "${ 1 & 2 }";
+        let mut lexer = Lexer::new(input);
+        let result = lexer.tokenize();
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            LexafError::OperNotAllowed { operator, .. } => {
+                assert_eq!(operator, "&");
+            },
+            _ => panic!("Expected OperNotAllowed error"),
+        }
+    }
+
+    #[test]
+    fn test_eval_block_unexpected_token() {
+        let input = "$ invalid { 1 + 1 }";
+        let mut lexer = Lexer::new(input);
+        let result = lexer.tokenize();
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            LexafError::UnexpectedToken { token, .. } => {
+                assert_eq!(token, "invalid");
+            },
+            _ => panic!("Expected UnexpectedToken error"),
+        }
+    }
+
+    #[test]
+    fn test_eval_block_unclosed_delimiter() {
+        // Missing the closing `}`
+        let input = "${ 1 + 2 ";
+        let mut lexer = Lexer::new(input);
+        let result = lexer.tokenize();
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            LexafError::UnclosedDelimiter { delimiter, .. } => {
+                assert_eq!(delimiter, "}");
+            },
+            _ => panic!("Expected UnclosedDelimiter error"),
         }
     }
 }
