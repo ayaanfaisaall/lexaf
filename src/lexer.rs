@@ -119,14 +119,12 @@ impl<'a> Lexer<'a> {
         self.chars.next();
         tokens.push(SpannedToken { token: Token::Eval, span: Span { start, end: start + 1 } });
         
-        let mut has_brace = false;
         while let Some(&(idx, ch)) = self.chars.peek() {
             match ch {
                 ' ' | '\n' | '\t' | '\r' => { self.chars.next(); }
                 '{' => {
                     self.chars.next();
                     tokens.push(SpannedToken { token: Token::LBrc, span: Span { start: idx, end: idx + 1 } });
-                    has_brace = true;
                     break;
                 }
                 _ => {
@@ -145,13 +143,6 @@ impl<'a> Lexer<'a> {
                 }
             }
         }
-
-        // if !has_brace {
-        //     return Err(LexafError::UnexpectedToken {
-        //         token: "EOF".to_string(),
-        //         span: (self.pos()..self.pos()).into(),
-        //     });
-        // }
 
         let mut closed = false;
         while let Some(&(inner_start, ch)) = self.chars.peek() {
