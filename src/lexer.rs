@@ -31,8 +31,135 @@ impl<'a> Lexer<'a> {
         self.chars.peek().map(|&(idx, _)| idx).unwrap_or(self.input.len())
     }
 
+    /// Consumes the input string and constructs a vector of spanned tokens.
+    pub fn tokenize(&mut self) -> Result<Vec<SpannedToken<'a>>, LexafError> {
+        let mut tokens = Vec::new();
+        
+        while let Some(&(start, c)) = self.chars.peek() {
+            match c {
+                ' ' | '\t' | '\r' => { self.chars.next(); }
+                '\n' => {
+                    self.chars.next();
+                    tokens.push(SpannedToken { token: Token::NewLine, span: Span { start, end: start + 1 } });
+                }
+                '\'' | '"' => {
+                    tokens.push(self.lex_string(start, c)?);
+                }
+                ';' => { self.chars.next(); tokens.push(SpannedToken { token: Token::SemiCln, span: Span { start, end: start + 1 } }); }
+                ',' => { self.chars.next(); tokens.push(SpannedToken { token: Token::Comma, span: Span { start, end: start + 1 } }); }
+                '{' => { self.chars.next(); tokens.push(SpannedToken { token: Token::LBrc, span: Span { start, end: start + 1 } }); }
+                '}' => { self.chars.next(); tokens.push(SpannedToken { token: Token::RBrc, span: Span { start, end: start + 1 } }); }
+                '[' => { self.chars.next(); tokens.push(SpannedToken { token: Token::LSqr, span: Span { start, end: start + 1 } }); }
+                ']' => { self.chars.next(); tokens.push(SpannedToken { token: Token::RSqr, span: Span { start, end: start + 1 } }); }
+                '<' => { self.chars.next(); tokens.push(SpannedToken { token: Token::RdrctIn, span: Span { start, end: start + 1 } }); }
+                '&' => {
+                    self.chars.next();
+                    if let Some(&(_, '&')) = self.chars.peek() {
+                        self.chars.next();
+                        tokens.push(SpannedToken { token: Token::AndAnd, span: Span { start, end: start + 2 } });
+                    } else {
+                        tokens.push(SpannedToken { token: Token::And, span: Span { start, end: start + 1 } });
+                    }
+                }
+                '!' => {
+                    self.chars.next();
+                    if let Some(&(_, '=')) = self.chars.peek() {
+                        self.chars.next();
+                        tokens.push(SpannedToken { token: Token::NotEq, span: Span { start, end: start + 2 } });
+                    } else {
+                        tokens.push(SpannedToken { token: Token::Bang, span: Span { start, end: start + 1 } });
+                    }
+                }
+                '=' => {
+                    self.chars.next();
+                    if let Some(&(_, '=')) = self.chars.peek() {
+                        self.chars.next();
+                        tokens.push(SpannedToken { token: Token::EqEq, span: Span { start, end: start + 2 } });
+                    } else {
+                        tokens.push(SpannedToken { token: Token::Assign, span: Span { start, end: start + 1 } });
+                    }
+                }
+                '|' => {
+                    self.chars.next();
+                    if let Some(&(_, '|')) = self.chars.peek() {
+                        self.chars.next();
+                        tokens.push(SpannedToken { token: Token::OrOr, span: Span { start, end: start + 2 } });
+                    } else {
+                        tokens.push(SpannedToken { token: Token::Pipe, span: Span { start, end: start + 1 } });
+                    }
+                }
+                '>' => {
+                    self.chars.next();
+                    if let Some(&(_, '>')) = self.chars.peek() {
+                        self.chars.next();
+                        tokens.push(SpannedToken { token: Token::AppendBoth, span: Span { start, end: start + 2 } });
+                    } else {
+                        tokens.push(SpannedToken { token: Token::RdrctBoth, span: Span { start, end: start + 1 } });
+                    }
+                }
+                '#' => {
+                    self.chars.next();
+                    while let Some(&(_, ch)) = self.chars.peek() {
+                        if ch == '\n' { break; }
+                        self.chars.next();
+                    }
+                }
+                '$' => {
+                    self.lex_eval_block(start, &mut tokens)?;
+                }
+                'o' | 'e' => {
+                    self.chars.next();
+                    
+                    if let Some(&(_, '>')) = self.chars.peek() {
+                        self.chars.next();
+                        
+                        if let Some(&(_, '>')) = self.chars.peek() {
+                            self.chars.next();
+                            let token = if c == 'o' { Token::AppendOut } else { Token::AppendErr };
+                            tokens.push(SpannedToken { token, span: Span { start, end: self.pos() } });
+                        } else {
+                            let token = if c == 'o' { Token::RdrctOut } else { Token::RdrctErr };
+                            tokens.push(SpannedToken { token, span: Span { start, end: self.pos() } });
+                        }
+                    } else {
+                        tokens.push(self.lex_word(start));
+                    }
+                }
+                _ => {
+                    tokens.push(self.lex_word(start));
+                }
+            }
+        }
+        
+        tokens.push(SpannedToken {
+            token: Token::EOF,
+            span: Span { start: self.input.len(), end: self.input.len() },
+        });
+        
+        Ok(tokens)
+    }
+
+    /// Handles lexing standard unquoted words/keywords outside of eval blocks.
+    fn lex_word(&mut self, start: usize) -> SpannedToken<'a> {
+        while let Some(&(_, ch)) = self.chars.peek() {
+            match ch {
+                  ' ' | '\n' | '\t' | '\r' | '"' | '='
+                | ';' | ','  | '&'  | '|'  | '!' | '#'
+                | '{' | '}'  | '['  | ']'  | '$' | '<' 
+                | '>' | '\'' => break,
+                _ => { self.chars.next(); }
+            }
+        }
+        
+        let end = self.pos();
+        let word = &self.input[start..end];
+        let token = Self::lex_keyword(word);
+        
+        SpannedToken { token, span: Span { start, end } }
+    }
+
     /// Parses a given string slice into a Float, Num, or falls back to a Word token.
-    fn parse_number_or_word(word: &'a str) -> Token<'a> {
+    fn lex_num_float(word: &'a str) -> Token<'a> {
         if let Ok(num) = word.parse::<i64>() {
             Token::Num(num)
         } else if let Ok(num) = word.parse::<f64>() {
@@ -43,7 +170,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Checks if a word is a keyword, otherwise falls back to number/word logic.
-    fn parse_keyword_number_or_word(word: &'a str) -> Token<'a> {
+    fn lex_keyword(word: &'a str) -> Token<'a> {
         match word {
             "let" => Token::Let,
             "print" => Token::Print,
@@ -57,7 +184,7 @@ impl<'a> Lexer<'a> {
             "break" => Token::Break,
             "true" => Token::True,
             "false" => Token::False,
-            _ => Self::parse_number_or_word(word),
+            _ => Self::lex_num_float(word),
         }
     }
 
@@ -189,7 +316,7 @@ impl<'a> Lexer<'a> {
                     let inner_end = self.pos();
                     let word = &self.input[inner_start..inner_end];
                     
-                    let token = Self::parse_number_or_word(word);
+                    let token = Self::lex_num_float(word);
                     tokens.push(SpannedToken { token, span: Span { start: inner_start, end: inner_end } });
                 }
             }
@@ -205,130 +332,4 @@ impl<'a> Lexer<'a> {
         Ok(())
     }
 
-    /// Handles lexing standard unquoted words/keywords outside of eval blocks.
-    fn lex_normal_word(&mut self, start: usize) -> SpannedToken<'a> {
-        while let Some(&(_, ch)) = self.chars.peek() {
-            match ch {
-                  ' ' | '\n' | '\t' | '\r' | '"' | '='
-                | ';' | ','  | '&'  | '|'  | '!' | '#'
-                | '{' | '}'  | '['  | ']'  | '$' | '<' 
-                | '>' | '\'' => break,
-                _ => { self.chars.next(); }
-            }
-        }
-        
-        let end = self.pos();
-        let word = &self.input[start..end];
-        let token = Self::parse_keyword_number_or_word(word);
-        
-        SpannedToken { token, span: Span { start, end } }
-    }
-
-    /// Consumes the input string and constructs a vector of spanned tokens.
-    pub fn tokenize(&mut self) -> Result<Vec<SpannedToken<'a>>, LexafError> {
-        let mut tokens = Vec::new();
-        
-        while let Some(&(start, c)) = self.chars.peek() {
-            match c {
-                ' ' | '\t' | '\r' => { self.chars.next(); }
-                '\n' => {
-                    self.chars.next();
-                    tokens.push(SpannedToken { token: Token::NewLine, span: Span { start, end: start + 1 } });
-                }
-                '\'' | '"' => {
-                    tokens.push(self.lex_string(start, c)?);
-                }
-                ';' => { self.chars.next(); tokens.push(SpannedToken { token: Token::SemiCln, span: Span { start, end: start + 1 } }); }
-                ',' => { self.chars.next(); tokens.push(SpannedToken { token: Token::Comma, span: Span { start, end: start + 1 } }); }
-                '{' => { self.chars.next(); tokens.push(SpannedToken { token: Token::LBrc, span: Span { start, end: start + 1 } }); }
-                '}' => { self.chars.next(); tokens.push(SpannedToken { token: Token::RBrc, span: Span { start, end: start + 1 } }); }
-                '[' => { self.chars.next(); tokens.push(SpannedToken { token: Token::LSqr, span: Span { start, end: start + 1 } }); }
-                ']' => { self.chars.next(); tokens.push(SpannedToken { token: Token::RSqr, span: Span { start, end: start + 1 } }); }
-                '<' => { self.chars.next(); tokens.push(SpannedToken { token: Token::RdrctIn, span: Span { start, end: start + 1 } }); }
-                '&' => {
-                    self.chars.next();
-                    if let Some(&(_, '&')) = self.chars.peek() {
-                        self.chars.next();
-                        tokens.push(SpannedToken { token: Token::AndAnd, span: Span { start, end: start + 2 } });
-                    } else {
-                        tokens.push(SpannedToken { token: Token::And, span: Span { start, end: start + 1 } });
-                    }
-                }
-                '!' => {
-                    self.chars.next();
-                    if let Some(&(_, '=')) = self.chars.peek() {
-                        self.chars.next();
-                        tokens.push(SpannedToken { token: Token::NotEq, span: Span { start, end: start + 2 } });
-                    } else {
-                        tokens.push(SpannedToken { token: Token::Bang, span: Span { start, end: start + 1 } });
-                    }
-                }
-                '=' => {
-                    self.chars.next();
-                    if let Some(&(_, '=')) = self.chars.peek() {
-                        self.chars.next();
-                        tokens.push(SpannedToken { token: Token::EqEq, span: Span { start, end: start + 2 } });
-                    } else {
-                        tokens.push(SpannedToken { token: Token::Assign, span: Span { start, end: start + 1 } });
-                    }
-                }
-                '|' => {
-                    self.chars.next();
-                    if let Some(&(_, '|')) = self.chars.peek() {
-                        self.chars.next();
-                        tokens.push(SpannedToken { token: Token::OrOr, span: Span { start, end: start + 2 } });
-                    } else {
-                        tokens.push(SpannedToken { token: Token::Pipe, span: Span { start, end: start + 1 } });
-                    }
-                }
-                '>' => {
-                    self.chars.next();
-                    if let Some(&(_, '>')) = self.chars.peek() {
-                        self.chars.next();
-                        tokens.push(SpannedToken { token: Token::AppendBoth, span: Span { start, end: start + 2 } });
-                    } else {
-                        tokens.push(SpannedToken { token: Token::RdrctBoth, span: Span { start, end: start + 1 } });
-                    }
-                }
-                '#' => {
-                    self.chars.next();
-                    while let Some(&(_, ch)) = self.chars.peek() {
-                        if ch == '\n' { break; }
-                        self.chars.next();
-                    }
-                }
-                '$' => {
-                    self.lex_eval_block(start, &mut tokens)?;
-                }
-                'o' | 'e' => {
-                    self.chars.next();
-                    
-                    if let Some(&(_, '>')) = self.chars.peek() {
-                        self.chars.next();
-                        
-                        if let Some(&(_, '>')) = self.chars.peek() {
-                            self.chars.next();
-                            let token = if c == 'o' { Token::AppendOut } else { Token::AppendErr };
-                            tokens.push(SpannedToken { token, span: Span { start, end: self.pos() } });
-                        } else {
-                            let token = if c == 'o' { Token::RdrctOut } else { Token::RdrctErr };
-                            tokens.push(SpannedToken { token, span: Span { start, end: self.pos() } });
-                        }
-                    } else {
-                        tokens.push(self.lex_normal_word(start));
-                    }
-                }
-                _ => {
-                    tokens.push(self.lex_normal_word(start));
-                }
-            }
-        }
-        
-        tokens.push(SpannedToken {
-            token: Token::EOF,
-            span: Span { start: self.input.len(), end: self.input.len() },
-        });
-        
-        Ok(tokens)
-    }
 }
