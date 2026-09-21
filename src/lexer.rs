@@ -145,8 +145,24 @@ impl<'a> Lexer<'a> {
             match ch {
                   ' ' | '\n' | '\t' | '\r' | '"' | '='
                 | ';' | ','  | '&'  | '|'  | '!' | '#'
-                | '{' | '}'  | '['  | ']'  | '$' | '<' 
+                | '['  | ']'  | '$' | '<' 
                 | '>' | '\'' => break,
+                '{' => {
+                    if let Some(&(_,'{')) = self.chars.peek() {
+                        self.chars.next();
+                        continue;
+                    } else {
+                        break;
+                    }
+                }
+                '}' => {
+                    if let Some(&(_,'}')) = self.chars.peek() {
+                        self.chars.next();
+                        continue;
+                    } else {
+                        break;
+                    }
+                }
                 _ => { self.chars.next(); }
             }
         }
