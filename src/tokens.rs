@@ -45,6 +45,10 @@ impl<'a> fmt::Display for Token<'a> {
             Token::RPths => write!(f, ")"),
             
             // Language keywords
+            Token::Fn => write!(f, "fn"),
+            Token::Alias => write!(f, "alias"),
+            Token::Export => write!(f, "export"),
+            Token::Source => write!(f, "source"),
             Token::Let => write!(f, "let"),
             Token::Print => write!(f, "print"),
             Token::If => write!(f, "if"),
@@ -64,7 +68,7 @@ impl<'a> fmt::Display for Token<'a> {
             Token::Multiply => write!(f, "*"),
             Token::Divide => write!(f, "/"),
             Token::Modulo => write!(f, "%"),
-            Token::Power => write!(f, "**"), 
+            Token::Power => write!(f, "^"), 
             
             // End of file
             Token::EOF => write!(f, "end of file"),
@@ -134,6 +138,10 @@ pub enum Token<'a> {
     RSqr,
     
     // lang keywords
+    Fn,
+    Alias,
+    Export,
+    Source,
     Let,
     Print,
     If,

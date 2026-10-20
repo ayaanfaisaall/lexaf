@@ -145,24 +145,24 @@ impl<'a> Lexer<'a> {
             match ch {
                   ' ' | '\n' | '\t' | '\r' | '"' | '='
                 | ';' | ','  | '&'  | '|'  | '!' | '#'
-                | '['  | ']'  | '$' | '<' 
+                | '['  | ']'  | '$' | '<'  | '}' | '{'
                 | '>' | '\'' => break,
-                '{' => {
-                    if let Some(&(_,'{')) = self.chars.peek() {
-                        self.chars.next();
-                        continue;
-                    } else {
-                        break;
-                    }
-                }
-                '}' => {
-                    if let Some(&(_,'}')) = self.chars.peek() {
-                        self.chars.next();
-                        continue;
-                    } else {
-                        break;
-                    }
-                }
+                // '{' => {
+                //     if let Some(&(_,'{')) = self.chars.peek() {
+                //         self.chars.next();
+                //         continue;
+                //     } else {
+                //         break;
+                //     }
+                // }
+                // '}' => {
+                //     if let Some(&(_,'}')) = self.chars.peek() {
+                //         self.chars.next();
+                //         continue;
+                //     } else {
+                //         break;
+                //     }
+                // }
                 _ => { self.chars.next(); }
             }
         }
@@ -188,6 +188,10 @@ impl<'a> Lexer<'a> {
     /// Checks if a word is a keyword, otherwise falls back to number/word logic.
     fn lex_keyword(word: &'a str) -> Token<'a> {
         match word {
+            "fn" => Token::Fn,
+            "alias" => Token::Alias,
+            "export" => Token::Export,
+            "source" => Token::Source,
             "let" => Token::Let,
             "print" => Token::Print,
             "if" => Token::If,
